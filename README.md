@@ -1,23 +1,57 @@
-# AR Tetris - Mobile AR Only
+# AR Tetris
 
-This build is intentionally scoped to mobile WebXR AR.
+AR Tetris is a browser-based WebXR augmented reality falling-block puzzle game. It is designed for supported mobile AR browsers and Meta Quest Browser.
 
-## Current fixes
+## How to run
 
-- Prevents duplicate start/intro triggers from spawning an orphan Tetris piece at the top.
-- Spawns the next piece only after line-clear animation finishes.
-- Increases base drop speed from 1000ms to 500ms per row.
-- Uses faster level progression scaling with a minimum 80ms drop interval.
-- Removes Material Icons ligature text so users do not see raw icon text before the icon font loads.
-- Keeps desktop/laptop keyboard and 3D fallback gameplay disabled by design.
+Use a secure HTTPS host. WebXR AR will not work from an insecure HTTP origin except localhost development contexts.
 
-## Supported path
+Recommended deployment:
 
-- Android Chrome
-- HTTPS hosting
-- ARCore / Google Play Services for AR
-- WebXR immersive-ar support
+- Vercel
+- Netlify
+- GitHub Pages with HTTPS
+- Any HTTPS static host
 
-## Unsupported path
+## Controls
 
-Unsupported devices show the disabled MOBILE AR ONLY button and explanatory status text.
+### Mobile touch
+
+- Tap left side: move piece left exactly one grid cell
+- Tap right side: move piece right exactly one grid cell
+- Tap middle: rotate once
+- Swipe downward: hard drop once
+
+### Quest / XR controller
+
+- Controller button during scanning/placement: lock detected floor and start
+- Controller input during gameplay: supported by the game input polling logic
+
+## Audio
+
+The package includes local audio assets in `music/`:
+
+- `music/music.mp3`
+- `music/tik.mp3`
+- `music/outro.mp3`
+- `music/lineclear.mp3`
+
+The background music is set to loop in the HTML and JavaScript.
+
+## WebXR notes
+
+WebXR AR requires:
+
+- HTTPS
+- WebGL
+- Browser support for `navigator.xr`
+- Support for `immersive-ar`
+- Device camera/tracking permission
+
+If an embedded platform blocks AR/camera permissions, open the game directly on the hosted URL.
+
+## Validation performed
+
+- JavaScript module syntax checked with Node
+- Package includes all referenced local audio files
+- VR line-clear animation moved into the WebXR-safe renderer animation loop
