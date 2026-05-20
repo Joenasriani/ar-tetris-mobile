@@ -617,6 +617,24 @@
         let xrVisibilityPaused = false;
         let fallbackMode = false;
         let lastRecorderMimeType = 'video/webm';
+        let lastValidPlacementMatrix = new THREE.Matrix4();
+        let lastValidPlacementPosition = new THREE.Vector3();
+        let lastValidPlacementTime = 0;
+        const scanTargetPosition = new THREE.Vector3();
+        const scanTargetQuaternion = new THREE.Quaternion();
+        const scanTargetScale = new THREE.Vector3();
+        const smoothedScanPosition = new THREE.Vector3();
+        const smoothedScanQuaternion = new THREE.Quaternion();
+        const smoothedScanScale = new THREE.Vector3(1, 1, 1);
+        const smoothedScanMatrix = new THREE.Matrix4();
+        let hasSmoothedScanPose = false;
+        const SCAN_POSITION_DEADZONE = 0.025;
+        const SCAN_ROTATION_DEADZONE = THREE.MathUtils.degToRad(1.5);
+        const SCAN_POSITION_SMOOTHING = 0.14;
+        const SCAN_ROTATION_SMOOTHING = 0.12;
+        const MIN_AR_BOARD_DISTANCE = 0.8;
+        const MAX_AR_BOARD_DISTANCE = 2.5;
+        const FALLBACK_AR_BOARD_DISTANCE = 1.5;
         const capabilityStatus = { secure: false, webgl: false, xr: false, immersiveAR: false, camera: 'unknown', supportsAR: false };
         
         // UI Vars
@@ -700,6 +718,79 @@
             const bevel = new THREE.LineSegments(sharedEdgeGeo, sharedEdgeMat);
             block.add(bevel);
             return block;
+        }
+
+        function isFiniteNumber(value) {
+            return Number.isFinite(value);
+        }
+
+        function isFiniteMatrixArray(matrixArray) {
+            return matrixArray && matrixArray.length === 16 && Array.from(matrixArray).every(isFiniteNumber);
+        }
+
+        function isFiniteVector3(vector) {
+            return vector && isFiniteNumber(vector.x) && isFiniteNumber(vector.y) && isFiniteNumber(vector.z);
+        }
+
+        function getSafeCameraForward() {
+            const forward = new THREE.Vector3();
+            camera.getWorldDirection(forward);
+            forward.y = 0;
+            if (!isFiniteVector3(forward) || forward.lengthSq() < 0.0001) {
+                forward.set(0, 0, -1);
+            }
+            return forward.normalize();
+        }
+
+        function getSafeBoardFloorPosition(candidatePosition) {
+            const cameraPos = new THREE.Vector3();
+            camera.getWorldPosition(cameraPos);
+            const forward = getSafeCameraForward();
+            const floorY = isFiniteVector3(candidatePosition) ? candidatePosition.y : Math.max(0, cameraPos.y - 1.2);
+
+            let horizontalOffset = isFiniteVector3(candidatePosition)
+                ? new THREE.Vector3(candidatePosition.x - cameraPos.x, 0, candidatePosition.z - cameraPos.z)
+                : forward.clone().multiplyScalar(FALLBACK_AR_BOARD_DISTANCE);
+
+            let distance = horizontalOffset.length();
+            if (!Number.isFinite(distance) || distance < 0.001) {
+                horizontalOffset = forward.clone().multiplyScalar(FALLBACK_AR_BOARD_DISTANCE);
+                distance = FALLBACK_AR_BOARD_DISTANCE;
+            }
+
+            const clampedDistance = THREE.MathUtils.clamp(distance, MIN_AR_BOARD_DISTANCE, MAX_AR_BOARD_DISTANCE);
+            horizontalOffset.normalize().multiplyScalar(clampedDistance);
+            return new THREE.Vector3(cameraPos.x + horizontalOffset.x, floorY, cameraPos.z + horizontalOffset.z);
+        }
+
+        function forceBoardVisible() {
+            if (!gameBoard) return;
+            gameBoard.visible = true;
+            gameBoard.traverse((child) => { child.visible = true; });
+        }
+
+        function placeBoardSafelyFromFloorPosition(floorPosition, reason = 'hit-test') {
+            if (!gameBoard) gameBoard = new THREE.Group();
+            const cameraPos = new THREE.Vector3();
+            camera.getWorldPosition(cameraPos);
+            const safeFloorPosition = getSafeBoardFloorPosition(floorPosition);
+            const baseLift = (BOARD_HEIGHT / 2) * BLOCK_SIZE;
+
+            gameBoard.position.copy(safeFloorPosition);
+            gameBoard.rotation.set(0, 0, 0);
+            gameBoard.lookAt(cameraPos.x, safeFloorPosition.y + baseLift * 0.5, cameraPos.z);
+            gameBoard.translateY(baseLift - 0.15);
+            forceBoardVisible();
+            if (!gameBoard.parent) scene.add(gameBoard);
+
+            const worldPos = new THREE.Vector3();
+            gameBoard.getWorldPosition(worldPos);
+            console.info('[AR Tetris] Board placed', {
+                reason,
+                x: Number(worldPos.x.toFixed(3)),
+                y: Number(worldPos.y.toFixed(3)),
+                z: Number(worldPos.z.toFixed(3))
+            });
         }
 
         let moveSound, gameOverSound, lineClearSound;
@@ -979,6 +1070,10 @@
             cleanupActivePieces();
             invalidateLineClear();
             gameState = GAME_STATE.SCANNING;
+            resetScanSmoothing();
+            lastValidPlacementTime = 0;
+            lastValidPlacementMatrix.identity();
+            lastValidPlacementPosition.set(0, 0, 0);
             updateMessage('Scan floor to start', true);
 
             try {
@@ -1009,6 +1104,9 @@
             if (gameOverCard) gameOverCard.style.display = 'none';
             updateMessage('', false);
             placementGrid.visible = false;
+            lastValidPlacementTime = 0;
+            lastValidPlacementMatrix.identity();
+            lastValidPlacementPosition.set(0, 0, 0);
             if (gameBoard) scene.remove(gameBoard);
             gameBoard = new THREE.Group();
             grid = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0));
@@ -1702,6 +1800,55 @@
             audioElement.play().catch(e => console.warn("Sound play warning:", e)); 
         }
 
+        function resetScanSmoothing() {
+            hasSmoothedScanPose = false;
+            smoothedScanPosition.set(0, 0, 0);
+            smoothedScanQuaternion.identity();
+            smoothedScanScale.set(1, 1, 1);
+            smoothedScanMatrix.identity();
+        }
+
+        function updateStablePlacementGrid(poseMatrix) {
+            smoothedScanMatrix.fromArray(poseMatrix);
+            smoothedScanMatrix.decompose(scanTargetPosition, scanTargetQuaternion, scanTargetScale);
+
+            if (!isFiniteVector3(scanTargetPosition)) return false;
+            if (
+                !Number.isFinite(scanTargetQuaternion.x) ||
+                !Number.isFinite(scanTargetQuaternion.y) ||
+                !Number.isFinite(scanTargetQuaternion.z) ||
+                !Number.isFinite(scanTargetQuaternion.w)
+            ) return false;
+
+            if (!hasSmoothedScanPose) {
+                smoothedScanPosition.copy(scanTargetPosition);
+                smoothedScanQuaternion.copy(scanTargetQuaternion);
+                smoothedScanScale.copy(scanTargetScale);
+                hasSmoothedScanPose = true;
+            } else {
+                const positionDelta = smoothedScanPosition.distanceTo(scanTargetPosition);
+                const rotationDelta = smoothedScanQuaternion.angleTo(scanTargetQuaternion);
+
+                if (positionDelta > SCAN_POSITION_DEADZONE) {
+                    smoothedScanPosition.lerp(scanTargetPosition, SCAN_POSITION_SMOOTHING);
+                }
+
+                if (rotationDelta > SCAN_ROTATION_DEADZONE) {
+                    smoothedScanQuaternion.slerp(scanTargetQuaternion, SCAN_ROTATION_SMOOTHING);
+                }
+
+                if (Number.isFinite(scanTargetScale.x) && Number.isFinite(scanTargetScale.y) && Number.isFinite(scanTargetScale.z)) {
+                    smoothedScanScale.lerp(scanTargetScale, 0.08);
+                }
+            }
+
+            smoothedScanMatrix.compose(smoothedScanPosition, smoothedScanQuaternion, smoothedScanScale);
+            placementGrid.matrix.copy(smoothedScanMatrix);
+            placementGrid.matrixAutoUpdate = false;
+            placementGrid.visible = true;
+            return true;
+        }
+
         function animate(timestamp, frame) {
             if (frame) {
                 const session = renderer.xr.getSession();
@@ -1724,29 +1871,51 @@
                             const hit = hitTestResults[0];
                             const referenceSpace = renderer.xr.getReferenceSpace();
                             const pose = hit.getPose(referenceSpace);
-                            
-                            placementGrid.matrix.fromArray(pose.transform.matrix);
-                            placementGrid.matrixAutoUpdate = false; 
-                            placementGrid.visible = true; 
-
-                            const normalY = pose.transform.matrix[5]; 
-                            const isFloor = normalY > 0.85;
-
-                            if (isFloor) {
-                                if (gameState === GAME_STATE.SCANNING) {
-                                    gameState = GAME_STATE.PLACING;
-                                    updateMessage("Tap or Trigger to lock", false);
-                                    placementGrid.material = greenGridMat; 
-                                    triggerHaptic(50); 
-                                }
-                            } else {
+                            const poseMatrix = pose?.transform?.matrix;
+                            if (!isFiniteMatrixArray(poseMatrix)) {
+                                resetScanSmoothing();
+                                placementGrid.visible = false;
+                                lastValidPlacementTime = 0;
                                 if (gameState === GAME_STATE.PLACING) {
                                     gameState = GAME_STATE.SCANNING;
                                     updateMessage("Scan floor to start", true);
-                                    placementGrid.material = blueGridMat; 
+                                }
+                            } else {
+                                if (!updateStablePlacementGrid(poseMatrix)) {
+                                    placementGrid.visible = false;
+                                    lastValidPlacementTime = 0;
+                                    if (gameState === GAME_STATE.PLACING) {
+                                        gameState = GAME_STATE.SCANNING;
+                                        updateMessage("Scan floor to start", true);
+                                    }
+                                    return;
+                                }
+
+                                const hitPosition = new THREE.Vector3();
+                                hitPosition.setFromMatrixPosition(placementGrid.matrix);
+                                const normalY = poseMatrix[5]; 
+                                const isFloor = normalY > 0.85 && isFiniteVector3(hitPosition);
+
+                                if (isFloor) {
+                                    lastValidPlacementMatrix.copy(placementGrid.matrix);
+                                    lastValidPlacementPosition.copy(hitPosition);
+                                    lastValidPlacementTime = performance.now();
+                                    if (gameState === GAME_STATE.SCANNING) {
+                                        gameState = GAME_STATE.PLACING;
+                                        updateMessage("Tap or Trigger to lock", false);
+                                        placementGrid.material = greenGridMat; 
+                                        triggerHaptic(50); 
+                                    }
+                                } else {
+                                    if (gameState === GAME_STATE.PLACING) {
+                                        gameState = GAME_STATE.SCANNING;
+                                        updateMessage("Scan floor to start", true);
+                                        placementGrid.material = blueGridMat; 
+                                    }
                                 }
                             }
                         } else {
+                            resetScanSmoothing();
                             placementGrid.visible = false; 
                             if (gameState === GAME_STATE.PLACING) {
                                 gameState = GAME_STATE.SCANNING;
@@ -1783,27 +1952,33 @@
                 return;
             }
 
-            if (!placementGrid.visible && !fallbackMode) {
-                updateMessage('Keep scanning until the floor reticle appears', true);
-                return;
+            const recentFloorPose = (performance.now() - lastValidPlacementTime) < 2000;
+            let placementPosition = null;
+            let placementReason = 'hit-test';
+
+            if (fallbackMode) {
+                placementPosition = new THREE.Vector3(0, 0, -FALLBACK_AR_BOARD_DISTANCE);
+                placementReason = 'fallback-mode';
+            } else if (placementGrid.visible && recentFloorPose && isFiniteVector3(lastValidPlacementPosition)) {
+                placementPosition = lastValidPlacementPosition.clone();
+            } else if (gameState === GAME_STATE.PLACING) {
+                const matrixPosition = new THREE.Vector3();
+                matrixPosition.setFromMatrixPosition(placementGrid.matrix);
+                if (isFiniteVector3(matrixPosition)) {
+                    placementPosition = matrixPosition;
+                    placementReason = 'current-reticle-matrix';
+                }
             }
 
-            const depthOffset = -0.5;
-            const baseLift = (BOARD_HEIGHT / 2) * BLOCK_SIZE;
+            if (!placementPosition || !isFiniteVector3(placementPosition)) {
+                const cameraPos = new THREE.Vector3();
+                camera.getWorldPosition(cameraPos);
+                placementPosition = cameraPos.clone().add(getSafeCameraForward().multiplyScalar(FALLBACK_AR_BOARD_DISTANCE));
+                placementPosition.y = Math.max(0, cameraPos.y - 1.2);
+                placementReason = 'camera-forward-safety-fallback';
+            }
 
-            const targetPos = new THREE.Vector3();
-            targetPos.setFromMatrixPosition(placementGrid.matrix);
-            gameBoard.position.copy(targetPos);
-
-            const cameraPos = new THREE.Vector3();
-            camera.getWorldPosition(cameraPos);
-            gameBoard.lookAt(cameraPos.x, gameBoard.position.y, cameraPos.z);
-
-            // Lift board from the detected floor and place it slightly in front of the reticle.
-            gameBoard.translateY(baseLift - 0.15);
-            gameBoard.translateZ(depthOffset);
-
-            if (!gameBoard.parent) scene.add(gameBoard);
+            placeBoardSafelyFromFloorPosition(placementPosition, placementReason);
             updateMessage('', false);
             runStartIntro();
         }
@@ -1909,6 +2084,9 @@
             if (renderer.xr.getSession()) {
                 // Reset to AR scanning state
                 gameState = GAME_STATE.SCANNING;
+                lastValidPlacementTime = 0;
+                lastValidPlacementMatrix.identity();
+                lastValidPlacementPosition.set(0, 0, 0);
                 updateMessage("Scan floor to start", true);
                 placementGrid.visible = false; 
             } else {
