@@ -1,4 +1,4 @@
-# AR Tetris
+# AR / VR Tetris
 
 AR Tetris is a browser-based WebXR augmented reality falling-block puzzle game. It is designed for supported mobile AR browsers and Meta Quest Browser.
 
