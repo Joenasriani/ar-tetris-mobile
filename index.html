@@ -805,24 +805,35 @@
         let lastMoveTime = 0;
         let lastRotateTime = 0;
         let lastXRPlaceAttemptTime = 0;
+        let suppressControllerSelectUntil = 0;
         const JOYSTICK_MOVE_DELAY = 350; // ms between moves when holding stick/controller; prevents accidental double-step feel
         const JOYSTICK_ROTATE_DELAY = 250; 
         const JOYSTICK_DEADZONE = 0.3;
         const XR_PLACE_COOLDOWN_MS = 350;
 
         function triggerHaptic(duration = 20) {
-            // Mobile Haptic
-            if (navigator.vibrate) navigator.vibrate(duration);
+            // Haptics must never be allowed to break gameplay. Some mobile/Quest browser
+            // builds expose partial haptic APIs during immersive AR; a failed pulse used
+            // to risk interrupting the touch-control path.
+            try {
+                if (navigator.vibrate) navigator.vibrate(duration);
+            } catch (e) {}
             
-            // XR Controller Haptic
-            const session = renderer.xr.getSession();
-            if (session) {
+            try {
+                const session = renderer?.xr?.getSession?.();
+                if (!session) return;
+
+                // If the current action came from the phone screen, do not also pulse
+                // transient XR input sources. Physical controllers still receive haptics.
+                if (Date.now() < suppressControllerSelectUntil) return;
+
                 for (const source of session.inputSources) {
-                    if (source.gamepad && source.gamepad.hapticActuators && source.gamepad.hapticActuators[0]) {
-                        source.gamepad.hapticActuators[0].pulse(1.0, duration);
+                    const actuator = source.gamepad?.hapticActuators?.[0];
+                    if (actuator && typeof actuator.pulse === 'function') {
+                        Promise.resolve(actuator.pulse(1.0, duration)).catch(() => {});
                     }
                 }
-            }
+            } catch (e) {}
         }
 
         // --- BGM HTML Audio Control ---
@@ -1125,6 +1136,10 @@
             // Some mobile AR browsers briefly toggle document visibility during camera/XR focus changes,
             // which can clear the drop interval and leave the game apparently frozen mid-play.
             if (renderer?.xr?.getSession()) return;
+            // Do not switch to PAUSED during a line-clear animation. That animation is completed
+            // by renderer.setAnimationLoop(); changing gameState mid-clear can cancel the animation
+            // while currentPiece is null, leaving the game with nothing active to resume.
+            if (lineClearInProgress || activeLineClearAnimation) return;
             if (gameState !== GAME_STATE.PLAYING) return;
             clearInterval(gameLoopInterval);
             gameLoopInterval = null;
@@ -1140,6 +1155,19 @@
             if (currentPiece) {
                 gameState = GAME_STATE.PLAYING;
                 clearInterval(gameLoopInterval);
+                gameLoopInterval = setInterval(gameTick, currentDropSpeed);
+            } else if (gameState === GAME_STATE.PAUSED) {
+                gameState = GAME_STATE.PLAYING;
+                recoverGameplayLoop();
+            }
+        }
+
+        function recoverGameplayLoop() {
+            if (gameState !== GAME_STATE.PLAYING || lineClearInProgress || activeLineClearAnimation) return;
+            if (!currentPiece) {
+                spawnPiece();
+            }
+            if (currentPiece && !gameLoopInterval) {
                 gameLoopInterval = setInterval(gameTick, currentDropSpeed);
             }
         }
@@ -1356,27 +1384,29 @@
             preloadAudioStatus();
 
             // Touch Controls (AR gameplay)
-            // Contract:
-            // - Tap left third: move left only.
-            // - Tap right third: move right only.
-            // - Tap middle third: rotate only.
-            // - Swipe down from any zone: hard drop from the current position.
+            // Stable single-gesture contract:
+            // - Tap left third: move left exactly once.
+            // - Tap right third: move right exactly once.
+            // - Tap middle third: rotate exactly once.
+            // - Swipe down from any zone: hard drop exactly once.
+            //
+            // Important: screen touches are handled only by touch events. Do not add
+            // pointer/click capture suppression on the renderer canvas because some
+            // mobile WebXR browsers can freeze or stall the immersive session when
+            // synthetic follow-up events are stopped at capture phase.
             let touchStartX = null;
             let touchStartY = null;
             let touchStartTime = 0;
-            let touchActionCommitted = false;
             let activeTouchId = null;
+            let touchGestureConsumed = false;
             let activeTouchSequenceId = 0;
             let committedTouchSequenceId = -1;
-            let ignoreTouchInputUntil = 0;
-            let lastTouchActionTime = 0;
-            let suppressControllerSelectUntil = 0;
+            let lastScreenTouchTime = 0;
             const TAP_MAX_DISTANCE = 28;
-            const TAP_MAX_TIME_MS = 320;
+            const TAP_MAX_TIME_MS = 360;
             const HARD_DROP_SWIPE_Y = 70;
             const SWIPE_DIRECTION_RATIO = 1.25;
-            const TOUCH_COOLDOWN_MS = 500;
-            const TOUCH_XR_SELECT_SUPPRESSION_MS = 1600;
+            const TOUCH_XR_SELECT_SUPPRESSION_MS = 900;
 
             function getTouchZone(x) {
                 const third = window.innerWidth / 3;
@@ -1386,46 +1416,36 @@
             }
 
             function isGameplayTouchTarget(target) {
+                if (!target || target.nodeType !== 1) return true;
                 return !(target.tagName === 'BUTTON' || target.closest('.control-btn') || target.closest('#replay-button'));
             }
 
-            function canTouchAct() {
-                const t = Date.now();
-                if (t < ignoreTouchInputUntil) return false;
-                if (t - lastTouchActionTime < TOUCH_COOLDOWN_MS) return false;
-                return true;
-            }
-
-            function suppressXRSelectFromScreenTouch() {
-                // In WebXR AR, a screen tap can also emit an XR "select" event.
-                // That event used to rotate the piece after a left/right touch was released.
-                // Suppress only controller-select events that happen immediately after a screen touch.
-                suppressControllerSelectUntil = Date.now() + TOUCH_XR_SELECT_SUPPRESSION_MS;
+            function markScreenTouchForXRSuppression() {
+                lastScreenTouchTime = Date.now();
+                suppressControllerSelectUntil = lastScreenTouchTime + TOUCH_XR_SELECT_SUPPRESSION_MS;
             }
 
             function commitTouchAction(action) {
-                // A screen touch sequence may create multiple browser/XR follow-up events.
-                // Commit exactly one gameplay action per active touch sequence.
-                if (touchActionCommitted) return;
+                if (touchGestureConsumed) return;
                 if (committedTouchSequenceId === activeTouchSequenceId) return;
-                if (!canTouchAct()) return;
+                if (gameState !== GAME_STATE.PLAYING || !currentPiece) return;
 
-                touchActionCommitted = true;
+                touchGestureConsumed = true;
                 committedTouchSequenceId = activeTouchSequenceId;
+                markScreenTouchForXRSuppression();
 
-                const t = Date.now();
-                lastTouchActionTime = t;
-                ignoreTouchInputUntil = t + TOUCH_COOLDOWN_MS;
-                suppressXRSelectFromScreenTouch();
-
-                if (action === 'left') {
-                    movePiece(-1);
-                } else if (action === 'right') {
-                    movePiece(1);
-                } else if (action === 'rotate') {
-                    rotatePiece();
-                } else if (action === 'hardDrop') {
-                    hardDrop();
+                try {
+                    if (action === 'left') {
+                        movePiece(-1);
+                    } else if (action === 'right') {
+                        movePiece(1);
+                    } else if (action === 'rotate') {
+                        rotatePiece();
+                    } else if (action === 'hardDrop') {
+                        hardDrop();
+                    }
+                } catch (err) {
+                    console.error('Touch action failed safely:', err);
                 }
             }
 
@@ -1433,54 +1453,57 @@
                 touchStartX = null;
                 touchStartY = null;
                 touchStartTime = 0;
-                touchActionCommitted = false;
                 activeTouchId = null;
+                touchGestureConsumed = false;
             }
 
             function onTouchStart(e) {
                 if (!isGameplayTouchTarget(e.target)) return;
-                e.preventDefault();
-                suppressXRSelectFromScreenTouch();
-                if (Date.now() < ignoreTouchInputUntil) {
+                if (e.touches.length !== 1) {
                     resetTouchState();
                     return;
                 }
 
+                markScreenTouchForXRSuppression();
+                e.preventDefault();
+
                 if (gameState === GAME_STATE.PLACING) {
-                    updateMessage("", false);
+                    updateMessage('', false);
                     playIntroAndStart();
+                    resetTouchState();
                     return;
                 }
 
-                if (gameState !== GAME_STATE.PLAYING || e.touches.length !== 1) {
+                if (gameState !== GAME_STATE.PLAYING) {
                     resetTouchState();
                     return;
                 }
 
                 const touch = e.touches[0];
-                activeTouchId = touch.identifier;
                 activeTouchSequenceId += 1;
+                activeTouchId = touch.identifier;
                 touchStartX = touch.pageX;
                 touchStartY = touch.pageY;
                 touchStartTime = Date.now();
-                touchActionCommitted = false;
+                touchGestureConsumed = false;
             }
 
             function onTouchMove(e) {
                 if (!isGameplayTouchTarget(e.target)) return;
-                e.preventDefault();
                 if (gameState !== GAME_STATE.PLAYING || touchStartY == null || e.touches.length !== 1) return;
+                e.preventDefault();
+                markScreenTouchForXRSuppression();
 
                 const touch = Array.from(e.touches).find(t => t.identifier === activeTouchId);
                 if (!touch) return;
+
                 const deltaX = touch.pageX - touchStartX;
                 const deltaY = touch.pageY - touchStartY;
                 const absX = Math.abs(deltaX);
                 const absY = Math.abs(deltaY);
 
-                // Downward swipe from any screen zone: hard drop exactly once.
                 if (
-                    !touchActionCommitted &&
+                    !touchGestureConsumed &&
                     deltaY >= HARD_DROP_SWIPE_Y &&
                     absY >= absX * SWIPE_DIRECTION_RATIO
                 ) {
@@ -1491,12 +1514,14 @@
             function onTouchEnd(e) {
                 if (!isGameplayTouchTarget(e.target)) return;
                 e.preventDefault();
+                markScreenTouchForXRSuppression();
+
                 if (gameState !== GAME_STATE.PLAYING || touchStartX == null || touchStartY == null) {
                     resetTouchState();
                     return;
                 }
 
-                if (touchActionCommitted) {
+                if (touchGestureConsumed) {
                     resetTouchState();
                     return;
                 }
@@ -1506,18 +1531,14 @@
                     resetTouchState();
                     return;
                 }
-                const endX = touch.pageX;
-                const endY = touch.pageY;
-                const deltaX = endX - touchStartX;
-                const deltaY = endY - touchStartY;
+
+                const deltaX = touch.pageX - touchStartX;
+                const deltaY = touch.pageY - touchStartY;
                 const absX = Math.abs(deltaX);
                 const absY = Math.abs(deltaY);
                 const travel = Math.hypot(deltaX, deltaY);
                 const touchTime = Date.now() - touchStartTime;
 
-                // Final release check: some AR browsers do not emit enough touchmove
-                // events during a fast top-to-bottom swipe. A downward swipe must always
-                // hard-drop all the way down, never soft-drop by one cell.
                 if (
                     deltaY >= HARD_DROP_SWIPE_Y &&
                     absY >= absX * SWIPE_DIRECTION_RATIO
@@ -1527,7 +1548,6 @@
                     return;
                 }
 
-                // Only taps trigger left/right/rotate. No release-rotate after side taps.
                 if (touchTime <= TAP_MAX_TIME_MS && travel <= TAP_MAX_DISTANCE) {
                     const zone = getTouchZone(touchStartX);
                     if (zone === 'left') {
@@ -1542,19 +1562,10 @@
                 resetTouchState();
             }
 
-            function suppressSyntheticTouchFollowUp(e) {
-                if (Date.now() < ignoreTouchInputUntil) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }
-
             renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: false });
             renderer.domElement.addEventListener('touchmove', onTouchMove, { passive: false });
             renderer.domElement.addEventListener('touchend', onTouchEnd, { passive: false });
             renderer.domElement.addEventListener('touchcancel', onTouchEnd, { passive: false });
-            renderer.domElement.addEventListener('pointerup', suppressSyntheticTouchFollowUp, true);
-            renderer.domElement.addEventListener('click', suppressSyntheticTouchFollowUp, true);
 
             window.addEventListener('resize', onWindowResize);
             
@@ -1870,6 +1881,8 @@
                 }
             }
 
+            recoverGameplayLoop();
+
             if (frame) {
                 const session = renderer.xr.getSession();
                 
@@ -1885,7 +1898,17 @@
 
                 if (gameState === GAME_STATE.SCANNING || gameState === GAME_STATE.PLACING) {
                     if (hitTestSource) {
-                        const hitTestResults = frame.getHitTestResults(hitTestSource); 
+                        let hitTestResults = [];
+                        try {
+                            hitTestResults = frame.getHitTestResults(hitTestSource);
+                        } catch (e) {
+                            console.warn('Hit-test read failed; keeping AR session alive:', e);
+                            resetScanSmoothing();
+                            placementGrid.visible = false;
+                            lastValidPlacementTime = 0;
+                            renderer.render(scene, camera);
+                            return;
+                        }
 
                         if (hitTestResults.length > 0) {
                             const hit = hitTestResults[0];
@@ -2029,7 +2052,9 @@
 
             spawnPiece();
             
-            gameLoopInterval = setInterval(gameTick, currentDropSpeed);
+            if (gameState === GAME_STATE.PLAYING && currentPiece) {
+                gameLoopInterval = setInterval(gameTick, currentDropSpeed);
+            }
         }
 
         function gameTick() {
