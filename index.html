@@ -794,7 +794,8 @@
         }
 
         let moveSound, gameOverSound, lineClearSound;
-        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = AudioContextClass ? new AudioContextClass() : null;
         let isMusicMuted = false; 
         let blueGridMat, greenGridMat;
         
@@ -805,11 +806,17 @@
         let lastMoveTime = 0;
         let lastRotateTime = 0;
         let lastXRPlaceAttemptTime = 0;
-        let suppressControllerSelectUntil = 0;
         const JOYSTICK_MOVE_DELAY = 350; // ms between moves when holding stick/controller; prevents accidental double-step feel
         const JOYSTICK_ROTATE_DELAY = 250; 
         const JOYSTICK_DEADZONE = 0.3;
         const XR_PLACE_COOLDOWN_MS = 350;
+
+        // Shared by touch handlers and top-level XR/controller handlers.
+        // Must stay in module scope; declaring this inside init() caused
+        // ReferenceError freezes when touch/XR input paths fired during gameplay.
+        let lastScreenTouchTime = 0;
+        let suppressControllerSelectUntil = 0;
+        const TOUCH_XR_SELECT_SUPPRESSION_MS = 900;
 
         function triggerHaptic(duration = 20) {
             // Haptics must never be allowed to break gameplay. Some mobile/Quest browser
@@ -856,7 +863,8 @@
 
         // --- SYNTHESIZED "AIRY WOOF" SOUND ---
         function playRotateSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
             
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
@@ -889,7 +897,8 @@
         }
 
         function playToot() {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             osc.connect(gainNode);
@@ -1401,12 +1410,10 @@
             let touchGestureConsumed = false;
             let activeTouchSequenceId = 0;
             let committedTouchSequenceId = -1;
-            let lastScreenTouchTime = 0;
             const TAP_MAX_DISTANCE = 28;
             const TAP_MAX_TIME_MS = 360;
             const HARD_DROP_SWIPE_Y = 70;
             const SWIPE_DIRECTION_RATIO = 1.25;
-            const TOUCH_XR_SELECT_SUPPRESSION_MS = 900;
 
             function getTouchZone(x) {
                 const third = window.innerWidth / 3;
@@ -2195,7 +2202,7 @@
                 gameLoopInterval = null;
 
                 const blocksToAnimate = [];
-                gameBoard.children.forEach(block => {
+                [...gameBoard.children].forEach(block => {
                     if (block !== currentPiece) {
                         const blockY = Math.round(BOARD_HEIGHT / 2 - 0.5 - (block.position.y / BLOCK_SIZE));
                         if (rowsToClear.includes(blockY)) {
@@ -2266,7 +2273,7 @@
                 grid.unshift(Array(BOARD_WIDTH).fill(0));
             }
 
-            gameBoard.children.forEach(block => {
+            [...gameBoard.children].forEach(block => {
                 if (block === currentPiece) return;
                 const blockY = Math.round(BOARD_HEIGHT / 2 - 0.5 - (block.position.y / BLOCK_SIZE));
                 let shift = 0;
