@@ -1121,6 +1121,10 @@
         }
 
         function pauseGameForVisibility() {
+            // Do not pause gameplay from document.hidden while an immersive XR session is active.
+            // Some mobile AR browsers briefly toggle document visibility during camera/XR focus changes,
+            // which can clear the drop interval and leave the game apparently frozen mid-play.
+            if (renderer?.xr?.getSession()) return;
             if (gameState !== GAME_STATE.PLAYING) return;
             clearInterval(gameLoopInterval);
             gameLoopInterval = null;
@@ -1850,6 +1854,22 @@
         }
 
         function animate(timestamp, frame) {
+            // Keep line-clear completion tied to Three/WebXR's active render loop for both
+            // mobile AR and headset VR. Do not depend on normal page timers/RAF here.
+            if (lineClearInProgress) {
+                if (activeLineClearAnimation) {
+                    updateLineClearAnimation(timestamp || performance.now());
+                } else {
+                    lineClearInProgress = false;
+                    if (gameState === GAME_STATE.PLAYING && !currentPiece) {
+                        spawnPiece();
+                    }
+                    if (gameState === GAME_STATE.PLAYING && !gameLoopInterval) {
+                        gameLoopInterval = setInterval(gameTick, currentDropSpeed);
+                    }
+                }
+            }
+
             if (frame) {
                 const session = renderer.xr.getSession();
                 
@@ -1928,7 +1948,6 @@
                     placementGrid.visible = false;
                 }
             }
-            if (lineClearInProgress) updateLineClearAnimation(timestamp || performance.now());
             renderer.render(scene, camera);
         }
         
@@ -2123,7 +2142,9 @@
                 flash.style.zIndex = '999';
                 flash.style.pointerEvents = 'none'; 
                 document.body.appendChild(flash);
-                setTimeout(() => document.body.removeChild(flash), 100);
+                setTimeout(() => {
+                    if (flash.parentNode) flash.parentNode.removeChild(flash);
+                }, 100);
             }
             scoreVal.textContent = score;
             if (linesVal) linesVal.textContent = linesClearedTotal;
@@ -2165,7 +2186,8 @@
                     blocksToAnimate,
                     progress: 0,
                     duration: 1000,
-                    lastTimestamp: performance.now()
+                    lastTimestamp: performance.now(),
+                    startedAt: performance.now()
                 };
 
                 return true;
@@ -2180,12 +2202,21 @@
             if (anim.clearSequenceId !== lineClearSequenceId || gameState !== GAME_STATE.PLAYING) {
                 activeLineClearAnimation = null;
                 lineClearInProgress = false;
+                if (gameState === GAME_STATE.PLAYING && !gameLoopInterval) {
+                    gameLoopInterval = setInterval(gameTick, currentDropSpeed);
+                }
                 return;
             }
 
-            const deltaTime = Math.max(0, timestamp - anim.lastTimestamp);
-            anim.lastTimestamp = timestamp;
-            anim.progress = Math.min(1.0, anim.progress + (deltaTime / anim.duration));
+            const safeTimestamp = Number.isFinite(timestamp) ? timestamp : performance.now();
+            const rawDeltaTime = Math.max(0, safeTimestamp - anim.lastTimestamp);
+            const deltaTime = Math.min(rawDeltaTime, 100);
+            anim.lastTimestamp = safeTimestamp;
+            if (safeTimestamp - anim.startedAt > 2500) {
+                anim.progress = 1.0;
+            } else {
+                anim.progress = Math.min(1.0, anim.progress + (deltaTime / anim.duration));
+            }
 
             if (anim.progress < 1) {
                 anim.blocksToAnimate.forEach(b => {
