@@ -421,6 +421,14 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         
+
+        .go-message {
+            margin: -8px 0 4px;
+            font-size: 0.86rem;
+            line-height: 1.35;
+            color: rgba(255,255,255,0.82);
+        }
+
         .go-stats {
             display: flex;
             flex-direction: column;
@@ -541,14 +549,19 @@
     <!-- 6. Game Over Modal -->
     <div id="game-over-card" class="glass-panel">
         <h1 class="go-title">Game Over</h1>
+        <p class="go-message">The blocks won this round. Classic geometry betrayal.</p>
         <div class="go-stats">
             <div class="go-stat-row">
                 <span class="go-label">Score</span>
                 <span class="go-val" id="go-score">0</span>
             </div>
             <div class="go-stat-row">
-                <span class="go-label">Level</span>
+                <span class="go-label">Level Reached</span>
                 <span class="go-val" id="go-level">1</span>
+            </div>
+            <div class="go-stat-row">
+                <span class="go-label">Lines Cleared</span>
+                <span class="go-val" id="go-lines">0</span>
             </div>
         </div>
         <button id="replay-button">
@@ -641,7 +654,7 @@
         let customArButton, resetArButton, launchPanel, launchStatus, launchDetails;
         let messageBox, messageText, phoneIcon;
         let hudPanel, scoreVal, linesVal, levelVal, nextPanel, nextPreview;
-        let gameOverCard, goScore, goLevel, replayButton;
+        let gameOverCard, goScore, goLevel, goLines, replayButton;
         let musicToggleBtn, musicIcon;
         // FIXED: Globally declare record vars
         let recordButton, iconRecord;
@@ -655,6 +668,9 @@
         const REC_MSG_DURATION_MS = 4000;
         
         let introScreen;
+        let worldIntroTitleSprite = null;
+        let lineClearAudioPool = [];
+        let lineClearAudioPoolIndex = 0;
         
         const GAME_STATE = {
             INITIALIZING: 0,
@@ -718,6 +734,61 @@
             const bevel = new THREE.LineSegments(sharedEdgeGeo, sharedEdgeMat);
             block.add(bevel);
             return block;
+        }
+
+
+        function createWorldIntroTitleSprite() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,255,255,0.85)';
+            ctx.shadowBlur = 28;
+            ctx.font = '900 118px Montserrat, Arial, sans-serif';
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = 'rgba(0, 20, 40, 0.95)';
+            ctx.strokeText("ROCKIN'", canvas.width / 2, 192);
+            ctx.fillStyle = '#ff40ff';
+            ctx.fillText("ROCKIN'", canvas.width / 2, 192);
+            ctx.shadowColor = 'rgba(255,0,255,0.75)';
+            ctx.shadowBlur = 32;
+            ctx.font = '900 152px Montserrat, Arial, sans-serif';
+            ctx.strokeText('TETRIS', canvas.width / 2, 330);
+            const gradient = ctx.createLinearGradient(260, 0, 760, 0);
+            gradient.addColorStop(0, '#00ffff');
+            gradient.addColorStop(0.5, '#ffe45c');
+            gradient.addColorStop(1, '#ff40ff');
+            ctx.fillStyle = gradient;
+            ctx.fillText('TETRIS', canvas.width / 2, 330);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.needsUpdate = true;
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
+            const sprite = new THREE.Sprite(material);
+            sprite.renderOrder = 20;
+            sprite.scale.set(1.15, 0.58, 1);
+            return sprite;
+        }
+
+        function showWorldIntroTitle() {
+            if (!gameBoard) return;
+            hideWorldIntroTitle();
+            worldIntroTitleSprite = createWorldIntroTitleSprite();
+            worldIntroTitleSprite.position.set(0, 1.35, 0.02);
+            gameBoard.add(worldIntroTitleSprite);
+        }
+
+        function hideWorldIntroTitle() {
+            if (!worldIntroTitleSprite) return;
+            const sprite = worldIntroTitleSprite;
+            if (sprite.parent) sprite.parent.remove(sprite);
+            if (sprite.material?.map) sprite.material.map.dispose();
+            if (sprite.material) sprite.material.dispose();
+            worldIntroTitleSprite = null;
         }
 
         function isFiniteNumber(value) {
@@ -987,7 +1058,7 @@
 
         function unlockAudio() {
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-            const allSounds = [bgmElement, gameOverSound, lineClearSound, moveSound];
+            const allSounds = [bgmElement, gameOverSound, lineClearSound, moveSound, ...lineClearAudioPool];
             allSounds.forEach(s => {
                 if (!s) return;
                 try {
@@ -1127,6 +1198,7 @@
             lastValidPlacementTime = 0;
             lastValidPlacementMatrix.identity();
             lastValidPlacementPosition.set(0, 0, 0);
+            hideWorldIntroTitle();
             if (gameBoard) scene.remove(gameBoard);
             gameBoard = new THREE.Group();
             grid = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0));
@@ -1228,6 +1300,7 @@
             lineClearInProgress = false;
             placementGrid.visible = false;
             cleanupActivePieces();
+            showWorldIntroTitle();
             introScreen.style.display = 'flex';
             introTimers.push(setTimeout(() => {
                 if (sequenceId !== startSequenceId || gameState !== GAME_STATE.STARTING) return;
@@ -1324,6 +1397,7 @@
             gameOverCard = document.getElementById('game-over-card');
             goScore = document.getElementById('go-score');
             goLevel = document.getElementById('go-level');
+            goLines = document.getElementById('go-lines');
             replayButton = document.getElementById('replay-button');
             
             introScreen = document.getElementById('intro-screen');
@@ -1348,6 +1422,7 @@
             moveSound = document.getElementById('audio-move');
             gameOverSound = document.getElementById('audio-gameover');
             lineClearSound = document.getElementById('audio-lineclear');
+            prepareLineClearAudioPool();
 
             // Capability-gated launch. Do not expose AR launch until immersive-ar is confirmed; do not block headset browsers with mobile-only checks.
             customArButton.addEventListener('click', async () => {
@@ -1368,6 +1443,22 @@
             musicToggleBtn.addEventListener('click', () => {
                 triggerHaptic(5); 
                 toggleMusic();
+            });
+
+            const stopAllGameAudioForExit = () => {
+                stopBGM();
+                [moveSound, lineClearSound, gameOverSound, ...lineClearAudioPool].forEach(audio => {
+                    if (!audio) return;
+                    try {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    } catch (e) {}
+                });
+            };
+            window.addEventListener('pagehide', stopAllGameAudioForExit);
+            window.addEventListener('beforeunload', stopAllGameAudioForExit);
+            window.addEventListener('blur', () => {
+                if (!xrSession) stopAllGameAudioForExit();
             });
 
             // --- RECORDING LOGIC ---
@@ -1822,6 +1913,37 @@
             audioElement.play().catch(e => console.warn("Sound play warning:", e)); 
         }
 
+
+        function prepareLineClearAudioPool() {
+            lineClearAudioPool = [];
+            lineClearAudioPoolIndex = 0;
+            if (!lineClearSound || !lineClearSound.src) return;
+            for (let i = 0; i < 4; i++) {
+                const clone = new Audio(lineClearSound.src);
+                clone.preload = 'auto';
+                clone.volume = lineClearSound.volume || 0.08;
+                clone.playsInline = true;
+                clone.load();
+                lineClearAudioPool.push(clone);
+            }
+        }
+
+        function playLineClearSFX() {
+            const pooled = lineClearAudioPool[lineClearAudioPoolIndex];
+            lineClearAudioPoolIndex = (lineClearAudioPoolIndex + 1) % Math.max(1, lineClearAudioPool.length);
+            const audio = pooled || lineClearSound;
+            if (!audio) return;
+            try {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.volume = 0.08;
+                const promise = audio.play();
+                if (promise) promise.catch(() => playSound(lineClearSound));
+            } catch (e) {
+                playSound(lineClearSound);
+            }
+        }
+
         function resetScanSmoothing() {
             hasSmoothedScanPose = false;
             smoothedScanPosition.set(0, 0, 0);
@@ -2044,6 +2166,7 @@
             cleanupActivePieces();
             invalidateLineClear();
             clearIntroTimers();
+            hideWorldIntroTitle();
             introScreen.style.opacity = '0';
             introScreen.style.display = 'none';
 
@@ -2084,6 +2207,7 @@
             
             goScore.textContent = score;
             goLevel.textContent = level;
+            if (goLines) goLines.textContent = linesClearedTotal;
             gameOverCard.style.display = 'flex';
 
             // Remove any active falling group immediately on Game Over.
@@ -2091,12 +2215,14 @@
             invalidateLineClear();
             
             stopBGM();
+            lineClearAudioPool.forEach(audio => { try { audio.pause(); audio.currentTime = 0; } catch (e) {} });
             playSound(gameOverSound);
         }
 
         // 7. Reset game: Go back to scanning
         function resetGame() {
             invalidateStartSequence();
+            hideWorldIntroTitle();
             // FIXED: STOP OUTRO MUSIC IMMEDIATELY
             if (gameOverSound) {
                 gameOverSound.pause();
@@ -2163,7 +2289,6 @@
                     gameLoopInterval = setInterval(gameTick, currentDropSpeed);
                 }
 
-                playSound(lineClearSound);
                 const flash = document.createElement('div');
                 flash.style.position = 'absolute';
                 flash.style.top = '0';
@@ -2194,6 +2319,7 @@
             }
 
             if (linesCleared > 0) {
+                playLineClearSFX();
                 // XR-safe line clear: run the animation from renderer.setAnimationLoop(),
                 // not window.requestAnimationFrame(), because normal page RAF can stall inside immersive WebXR.
                 lineClearInProgress = true;
