@@ -396,20 +396,21 @@
 
         /* Game Over Modal */
         #game-over-card {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 300px;
+            width: min(86vw, 340px);
+            max-width: 340px;
             padding: 30px 20px;
-            display: none; 
+            display: none;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-            z-index: 105;
+            gap: 18px;
+            z-index: 10000;
             text-align: center;
             pointer-events: auto;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.55), 0 0 26px rgba(138,43,226,0.45);
         }
         
         .go-title {
@@ -563,6 +564,10 @@
                 <span class="go-label">Lines Cleared</span>
                 <span class="go-val" id="go-lines">0</span>
             </div>
+            <div class="go-stat-row best-score-row">
+                <span class="go-label">Best Score</span>
+                <span class="go-val" id="go-best">0</span>
+            </div>
         </div>
         <button id="replay-button">
             <span class="ui-icon" style="vertical-align: middle; margin-right: 5px; font-size: 1.2rem;" aria-hidden="true">↻</span>
@@ -654,7 +659,7 @@
         let customArButton, resetArButton, launchPanel, launchStatus, launchDetails;
         let messageBox, messageText, phoneIcon;
         let hudPanel, scoreVal, linesVal, levelVal, nextPanel, nextPreview;
-        let gameOverCard, goScore, goLevel, goLines, replayButton;
+        let gameOverCard, goScore, goLevel, goLines, goBest, replayButton;
         let musicToggleBtn, musicIcon;
         // FIXED: Globally declare record vars
         let recordButton, iconRecord;
@@ -689,6 +694,7 @@
         let lineClearSequenceId = 0;
         let activeLineClearAnimation = null;
         let score = 0;
+        let bestScore = 0;
         let nextTypeIndex = null;
         
         // --- Level Variables ---
@@ -751,17 +757,13 @@
             ctx.lineWidth = 12;
             ctx.strokeStyle = 'rgba(0, 20, 40, 0.95)';
             ctx.strokeText("ROCKIN'", canvas.width / 2, 192);
-            ctx.fillStyle = '#ff40ff';
+            ctx.fillStyle = '#8a2be2';
             ctx.fillText("ROCKIN'", canvas.width / 2, 192);
             ctx.shadowColor = 'rgba(255,0,255,0.75)';
             ctx.shadowBlur = 32;
             ctx.font = '900 152px Montserrat, Arial, sans-serif';
             ctx.strokeText('TETRIS', canvas.width / 2, 330);
-            const gradient = ctx.createLinearGradient(260, 0, 760, 0);
-            gradient.addColorStop(0, '#00ffff');
-            gradient.addColorStop(0.5, '#ffe45c');
-            gradient.addColorStop(1, '#ff40ff');
-            ctx.fillStyle = gradient;
+            ctx.fillStyle = '#8a2be2';
             ctx.fillText('TETRIS', canvas.width / 2, 330);
 
             const texture = new THREE.CanvasTexture(canvas);
@@ -775,11 +777,20 @@
         }
 
         function showWorldIntroTitle() {
-            if (!gameBoard) return;
             hideWorldIntroTitle();
             worldIntroTitleSprite = createWorldIntroTitleSprite();
-            worldIntroTitleSprite.position.set(0, 1.35, 0.02);
-            gameBoard.add(worldIntroTitleSprite);
+            scene.add(worldIntroTitleSprite);
+            updateWorldIntroTitlePlacement();
+        }
+
+        function updateWorldIntroTitlePlacement() {
+            if (!worldIntroTitleSprite || !camera) return;
+            const cameraPos = new THREE.Vector3();
+            camera.getWorldPosition(cameraPos);
+            const forward = getSafeCameraForward();
+            worldIntroTitleSprite.position.copy(cameraPos).add(forward.multiplyScalar(1.35));
+            worldIntroTitleSprite.position.y = cameraPos.y;
+            worldIntroTitleSprite.quaternion.copy(camera.quaternion);
         }
 
         function hideWorldIntroTitle() {
@@ -930,6 +941,17 @@
                 bgmElement.pause();
                 bgmElement.currentTime = 0;
             }
+        }
+
+        function stopAllGameAudioForExit() {
+            stopBGM();
+            [moveSound, lineClearSound, gameOverSound, ...lineClearAudioPool].forEach(audio => {
+                if (!audio) return;
+                try {
+                    audio.pause();
+                    audio.currentTime = 0;
+                } catch (e) {}
+            });
         }
 
         // --- SYNTHESIZED "AIRY WOOF" SOUND ---
@@ -1130,6 +1152,9 @@
                 xrSession = session;
                 xrSession.addEventListener('end', onXRSessionEnded, { once: true });
                 xrSession.addEventListener('visibilitychange', () => {
+                    if (xrSession.visibilityState === 'hidden') {
+                        stopAllGameAudioForExit();
+                    }
                     if (xrSession.visibilityState === 'hidden' && gameState === GAME_STATE.PLAYING) {
                         pauseGameForVisibility();
                     } else if (xrVisibilityPaused) {
@@ -1398,6 +1423,8 @@
             goScore = document.getElementById('go-score');
             goLevel = document.getElementById('go-level');
             goLines = document.getElementById('go-lines');
+            goBest = document.getElementById('go-best');
+            bestScore = loadBestScore();
             replayButton = document.getElementById('replay-button');
             
             introScreen = document.getElementById('intro-screen');
@@ -1445,21 +1472,9 @@
                 toggleMusic();
             });
 
-            const stopAllGameAudioForExit = () => {
-                stopBGM();
-                [moveSound, lineClearSound, gameOverSound, ...lineClearAudioPool].forEach(audio => {
-                    if (!audio) return;
-                    try {
-                        audio.pause();
-                        audio.currentTime = 0;
-                    } catch (e) {}
-                });
-            };
             window.addEventListener('pagehide', stopAllGameAudioForExit);
             window.addEventListener('beforeunload', stopAllGameAudioForExit);
-            window.addEventListener('blur', () => {
-                if (!xrSession) stopAllGameAudioForExit();
-            });
+            window.addEventListener('blur', stopAllGameAudioForExit);
 
             // --- RECORDING LOGIC ---
             if (recordButton) recordButton.addEventListener('click', () => {
@@ -1473,6 +1488,9 @@
             });
 
             document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopAllGameAudioForExit();
+                }
                 if (document.hidden && gameState === GAME_STATE.PLAYING) {
                     pauseGameForVisibility();
                 } else if (!document.hidden && xrVisibilityPaused) {
@@ -2011,6 +2029,9 @@
             }
 
             recoverGameplayLoop();
+            if (gameState === GAME_STATE.STARTING && worldIntroTitleSprite) {
+                updateWorldIntroTitlePlacement();
+            }
 
             if (frame) {
                 const session = renderer.xr.getSession();
@@ -2201,13 +2222,33 @@
             }
         }
         
+
+        function loadBestScore() {
+            try {
+                const stored = Number(localStorage.getItem('arTetrisBestScore') || 0);
+                return Number.isFinite(stored) ? stored : 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function saveBestScore(currentScore) {
+            bestScore = Math.max(bestScore || 0, currentScore || 0);
+            try {
+                localStorage.setItem('arTetrisBestScore', String(bestScore));
+            } catch (e) {}
+            return bestScore;
+        }
+
         function gameOver() {
             clearInterval(gameLoopInterval);
             gameState = GAME_STATE.GAME_OVER;
             
+            const finalBestScore = saveBestScore(score);
             goScore.textContent = score;
             goLevel.textContent = level;
             if (goLines) goLines.textContent = linesClearedTotal;
+            if (goBest) goBest.textContent = finalBestScore;
             gameOverCard.style.display = 'flex';
 
             // Remove any active falling group immediately on Game Over.
