@@ -2422,6 +2422,30 @@
             return bestScore;
         }
 
+        function showGameOverUI() {
+            const activeXRSession = renderer?.xr?.getSession?.();
+            const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+            const isMobileARSession = !!(activeXRSession && xrSession && coarsePointer);
+
+            if (isMobileARSession) {
+                // Mobile AR: use the normal tappable HTML card only.
+                gameOverCard.style.display = 'flex';
+                hideWorldGameOverPanel();
+                return;
+            }
+
+            if (activeXRSession) {
+                // Headset/controller XR: use the in-world replay panel only.
+                gameOverCard.style.display = 'none';
+                showWorldGameOverPanel();
+                return;
+            }
+
+            // Non-XR fallback/browser mode: use normal HTML card.
+            gameOverCard.style.display = 'flex';
+            hideWorldGameOverPanel();
+        }
+
         function gameOver() {
             clearInterval(gameLoopInterval);
             gameState = GAME_STATE.GAME_OVER;
@@ -2431,10 +2455,9 @@
             goLevel.textContent = level;
             if (goLines) goLines.textContent = linesClearedTotal;
             if (goBest) goBest.textContent = finalBestScore;
-            gameOverCard.style.display = 'flex';
+            showGameOverUI();
             xrReplayButtonWasPressed = true;
             lastXRReplayAttemptTime = Date.now();
-            showWorldGameOverPanel();
 
             // Remove any active falling group immediately on Game Over.
             cleanupActivePieces();
