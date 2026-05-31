@@ -1,0 +1,61 @@
+name: Patch Game Over UI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-gameover-ui.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Patch index.html
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          helper = """        function showGameOverUI() {\n            const activeXRSession = renderer?.xr?.getSession?.();\n            const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;\n            const isMobileARSession = !!(activeXRSession && xrSession && coarsePointer);\n\n            if (isMobileARSession) {\n                // Mobile AR: use the normal tappable HTML card only.\n                gameOverCard.style.display = 'flex';\n                hideWorldGameOverPanel();\n                return;\n            }\n\n            if (activeXRSession) {\n                // Headset/controller XR: use the in-world replay panel only.\n                gameOverCard.style.display = 'none';\n                showWorldGameOverPanel();\n                return;\n            }\n\n            // Non-XR fallback/browser mode: use normal HTML card.\n            gameOverCard.style.display = 'flex';\n            hideWorldGameOverPanel();\n        }\n\n"""
+
+          if 'function showGameOverUI()' not in text:
+              marker = '        function gameOver() {\n'
+              if marker not in text:
+                  raise SystemExit('Could not find gameOver() marker')
+              text = text.replace(marker, helper + marker, 1)
+
+          old = """            gameOverCard.style.display = 'flex';\n            xrReplayButtonWasPressed = true;\n            lastXRReplayAttemptTime = Date.now();\n            showWorldGameOverPanel();\n"""
+          new = """            showGameOverUI();\n            xrReplayButtonWasPressed = true;\n            lastXRReplayAttemptTime = Date.now();\n"""
+          if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('Could not find gameOver UI block to replace')
+
+          workflow = Path('.github/workflows/patch-gameover-ui.yml')
+          if workflow.exists():
+              workflow.unlink()
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/patch-gameover-ui.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Fix mobile AR game over UI overlap"
+            git push
+          fi
