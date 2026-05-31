@@ -674,6 +674,7 @@
         
         let introScreen;
         let worldIntroTitleSprite = null;
+        let worldGameOverPanelSprite = null;
         let lineClearAudioPool = [];
         let lineClearAudioPoolIndex = 0;
         
@@ -802,6 +803,154 @@
             worldIntroTitleSprite = null;
         }
 
+        function createWorldGameOverPanelSprite() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 768;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const panelX = 92;
+            const panelY = 70;
+            const panelW = 840;
+            const panelH = 620;
+            const radius = 48;
+
+            const drawRoundRect = (x, y, w, h, r) => {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + w - r, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctx.lineTo(x + w, y + h - r);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctx.lineTo(x + r, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+            };
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(138, 43, 226, 0.85)';
+            ctx.shadowBlur = 46;
+            drawRoundRect(panelX, panelY, panelW, panelH, radius);
+            ctx.fillStyle = 'rgba(18, 18, 24, 0.88)';
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(255, 65, 54, 0.85)';
+            ctx.shadowBlur = 28;
+            ctx.font = '900 92px Montserrat, Arial, sans-serif';
+            ctx.fillStyle = '#FF4136';
+            ctx.fillText('GAME OVER', canvas.width / 2, 164);
+            ctx.restore();
+
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '500 28px Montserrat, Arial, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
+            ctx.fillText('The blocks won this round. Classic geometry betrayal.', canvas.width / 2, 230);
+            ctx.restore();
+
+            const rows = [
+                ['Score', String(score)],
+                ['Level Reached', String(level)],
+                ['Lines Cleared', String(linesClearedTotal)],
+                ['Best Score', String(bestScore || 0)]
+            ];
+            const rowX = 220;
+            const rowW = 584;
+            rows.forEach(([label, value], index) => {
+                const y = 305 + index * 62;
+                ctx.beginPath();
+                ctx.moveTo(rowX, y + 33);
+                ctx.lineTo(rowX + rowW, y + 33);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                ctx.stroke();
+
+                ctx.textBaseline = 'middle';
+                ctx.font = '600 31px Montserrat, Arial, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.64)';
+                ctx.fillText(label, rowX, y);
+
+                ctx.font = '800 34px Montserrat, Arial, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillStyle = index === 0 ? '#FFDC00' : '#FFFFFF';
+                ctx.fillText(value, rowX + rowW, y);
+            });
+
+            const btnX = 218;
+            const btnY = 568;
+            const btnW = 588;
+            const btnH = 78;
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 255, 255, 0.55)';
+            ctx.shadowBlur = 26;
+            drawRoundRect(btnX, btnY, btnW, btnH, 39);
+            const gradient = ctx.createLinearGradient(btnX, btnY, btnX + btnW, btnY + btnH);
+            gradient.addColorStop(0, '#8a2be2');
+            gradient.addColorStop(0.55, '#4169e1');
+            gradient.addColorStop(1, '#00cfff');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '900 34px Montserrat, Arial, sans-serif';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('↻  TRIGGER / A TO REPLAY', canvas.width / 2, btnY + btnH / 2);
+            ctx.restore();
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.needsUpdate = true;
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
+            const sprite = new THREE.Sprite(material);
+            sprite.renderOrder = 30;
+            sprite.scale.set(1.25, 0.94, 1);
+            return sprite;
+        }
+
+        function showWorldGameOverPanel() {
+            hideWorldGameOverPanel();
+            worldGameOverPanelSprite = createWorldGameOverPanelSprite();
+            scene.add(worldGameOverPanelSprite);
+            updateWorldGameOverPanelPlacement();
+        }
+
+        function updateWorldGameOverPanelPlacement() {
+            if (!worldGameOverPanelSprite || !camera) return;
+            const cameraPos = new THREE.Vector3();
+            camera.getWorldPosition(cameraPos);
+            const forward = getSafeCameraForward();
+            worldGameOverPanelSprite.position.copy(cameraPos).add(forward.multiplyScalar(1.45));
+            worldGameOverPanelSprite.position.y = cameraPos.y;
+            worldGameOverPanelSprite.quaternion.copy(camera.quaternion);
+        }
+
+        function hideWorldGameOverPanel() {
+            if (!worldGameOverPanelSprite) return;
+            const sprite = worldGameOverPanelSprite;
+            if (sprite.parent) sprite.parent.remove(sprite);
+            if (sprite.material?.map) sprite.material.map.dispose();
+            if (sprite.material) sprite.material.dispose();
+            worldGameOverPanelSprite = null;
+        }
+
         function isFiniteNumber(value) {
             return Number.isFinite(value);
         }
@@ -892,6 +1041,9 @@
         const JOYSTICK_ROTATE_DELAY = 250; 
         const JOYSTICK_DEADZONE = 0.3;
         const XR_PLACE_COOLDOWN_MS = 350;
+        const XR_REPLAY_COOLDOWN_MS = 900;
+        let lastXRReplayAttemptTime = 0;
+        let xrReplayButtonWasPressed = false;
 
         // Shared by touch handlers and top-level XR/controller handlers.
         // Must stay in module scope; declaring this inside init() caused
@@ -1224,6 +1376,7 @@
             lastValidPlacementMatrix.identity();
             lastValidPlacementPosition.set(0, 0, 0);
             hideWorldIntroTitle();
+            hideWorldGameOverPanel();
             if (gameBoard) scene.remove(gameBoard);
             gameBoard = new THREE.Group();
             grid = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(0));
@@ -1344,6 +1497,7 @@
 
         function startFallback3D() {
             invalidateStartSequence();
+            hideWorldGameOverPanel();
             fallbackMode = true;
             clearInterval(gameLoopInterval);
             gameLoopInterval = null;
@@ -1720,13 +1874,26 @@
             return candidateButtons.some(index => gamepad.buttons[index] && gamepad.buttons[index].pressed);
         }
 
+        function tryReplayFromXRController() {
+            const now = Date.now();
+            if (now - lastXRReplayAttemptTime < XR_REPLAY_COOLDOWN_MS) return;
+            lastXRReplayAttemptTime = now;
+
+            if (gameState === GAME_STATE.GAME_OVER) {
+                triggerHaptic(8);
+                resetGame();
+            }
+        }
+
         // --- XR CONTROLLER EVENT HANDLER ---
         function onControllerSelect() {
             // Physical XR controller select is allowed. Screen taps are handled by
             // the touch-zone controls and must not rotate again on finger release.
             if (Date.now() < suppressControllerSelectUntil) return;
 
-            if (gameState === GAME_STATE.SCANNING || gameState === GAME_STATE.PLACING) {
+            if (gameState === GAME_STATE.GAME_OVER) {
+                tryReplayFromXRController();
+            } else if (gameState === GAME_STATE.SCANNING || gameState === GAME_STATE.PLACING) {
                 tryLockGroundFromXRController();
             } else if (gameState === GAME_STATE.PLAYING) {
                 rotatePiece(); // Controller trigger rotates in game
@@ -1739,6 +1906,17 @@
             if (!session) return;
 
             const now = Date.now();
+
+            if (gameState === GAME_STATE.GAME_OVER) {
+                const replayPressed = Array.from(session.inputSources).some(source => isXRPlaceButtonPressed(source.gamepad));
+                if (replayPressed && !xrReplayButtonWasPressed) {
+                    tryReplayFromXRController();
+                }
+                xrReplayButtonWasPressed = replayPressed;
+                return;
+            }
+
+            xrReplayButtonWasPressed = false;
 
             for (const source of session.inputSources) {
                 if (source.gamepad) {
@@ -2032,12 +2210,15 @@
             if (gameState === GAME_STATE.STARTING && worldIntroTitleSprite) {
                 updateWorldIntroTitlePlacement();
             }
+            if (gameState === GAME_STATE.GAME_OVER && worldGameOverPanelSprite) {
+                updateWorldGameOverPanelPlacement();
+            }
 
             if (frame) {
                 const session = renderer.xr.getSession();
                 
                 // --- UPDATE XR CONTROLS ---
-                if (gameState === GAME_STATE.SCANNING || gameState === GAME_STATE.PLACING || gameState === GAME_STATE.PLAYING) {
+                if (gameState === GAME_STATE.SCANNING || gameState === GAME_STATE.PLACING || gameState === GAME_STATE.PLAYING || gameState === GAME_STATE.GAME_OVER) {
                     pollControllers();
                 }
 
@@ -2188,6 +2369,7 @@
             invalidateLineClear();
             clearIntroTimers();
             hideWorldIntroTitle();
+            hideWorldGameOverPanel();
             introScreen.style.opacity = '0';
             introScreen.style.display = 'none';
 
@@ -2250,6 +2432,9 @@
             if (goLines) goLines.textContent = linesClearedTotal;
             if (goBest) goBest.textContent = finalBestScore;
             gameOverCard.style.display = 'flex';
+            xrReplayButtonWasPressed = true;
+            lastXRReplayAttemptTime = Date.now();
+            showWorldGameOverPanel();
 
             // Remove any active falling group immediately on Game Over.
             cleanupActivePieces();
@@ -2264,6 +2449,7 @@
         function resetGame() {
             invalidateStartSequence();
             hideWorldIntroTitle();
+            hideWorldGameOverPanel();
             // FIXED: STOP OUTRO MUSIC IMMEDIATELY
             if (gameOverSound) {
                 gameOverSound.pause();
