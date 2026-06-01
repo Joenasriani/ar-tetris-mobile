@@ -784,6 +784,61 @@
             updateWorldIntroTitlePlacement();
         }
 
+        function isLikelyHeadsetBrowser() {
+            const ua = navigator.userAgent || '';
+            return /OculusBrowser|Oculus Quest|Meta Quest|Quest\b|Pico\b|PICO|Vive|Focus\b|Vision Pro|Valve Index|Windows Mixed Reality/i.test(ua);
+        }
+
+        function isLikelyHandheldMobile() {
+            const ua = navigator.userAgent || '';
+            const hasCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+            const hasMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+            return hasCoarsePointer && hasMobileUA && !isLikelyHeadsetBrowser();
+        }
+
+        function shouldUseWorldXRUI() {
+            const activeXRSession = renderer?.xr?.getSession?.();
+            if (!activeXRSession) return false;
+            if (isLikelyHandheldMobile()) return false;
+            if (isLikelyHeadsetBrowser()) return true;
+
+            const inputSources = Array.from(activeXRSession.inputSources || []);
+            const hasTrackedController = inputSources.some(source => (
+                source.targetRayMode === 'tracked-pointer' ||
+                (source.handedness && source.handedness !== 'none') ||
+                !!source.gamepad
+            ));
+            if (hasTrackedController) return true;
+
+            return !activeXRSession.domOverlayState;
+        }
+
+        function showIntroUI(sequenceId) {
+            if (shouldUseWorldXRUI()) {
+                if (introScreen) {
+                    introScreen.style.opacity = '0';
+                    introScreen.style.display = 'none';
+                }
+                showWorldIntroTitle();
+                return;
+            }
+
+            hideWorldIntroTitle();
+            if (introScreen) {
+                introScreen.style.display = 'flex';
+                introTimers.push(setTimeout(() => {
+                    if (sequenceId === startSequenceId && gameState === GAME_STATE.STARTING) introScreen.style.opacity = '1';
+                }, 50));
+            }
+        }
+
+        function hideIntroUI() {
+            hideWorldIntroTitle();
+            if (!introScreen) return;
+            introScreen.style.opacity = '0';
+            introScreen.style.display = 'none';
+        }
+
         function updateWorldIntroTitlePlacement() {
             if (!worldIntroTitleSprite || !camera) return;
             const cameraPos = new THREE.Vector3();
@@ -1478,18 +1533,13 @@
             lineClearInProgress = false;
             placementGrid.visible = false;
             cleanupActivePieces();
-            showWorldIntroTitle();
-            introScreen.style.display = 'flex';
+            showIntroUI(sequenceId);
             introTimers.push(setTimeout(() => {
                 if (sequenceId !== startSequenceId || gameState !== GAME_STATE.STARTING) return;
-                introScreen.style.opacity = '1';
-            }, 50));
-            introTimers.push(setTimeout(() => {
-                if (sequenceId !== startSequenceId || gameState !== GAME_STATE.STARTING) return;
-                introScreen.style.opacity = '0';
+                if (introScreen && !shouldUseWorldXRUI()) introScreen.style.opacity = '0';
                 introTimers.push(setTimeout(() => {
                     if (sequenceId !== startSequenceId || gameState !== GAME_STATE.STARTING) return;
-                    introScreen.style.display = 'none';
+                    if (introScreen) introScreen.style.display = 'none';
                     startGame(sequenceId);
                 }, 500));
             }, 1200));
@@ -2368,10 +2418,8 @@
             cleanupActivePieces();
             invalidateLineClear();
             clearIntroTimers();
-            hideWorldIntroTitle();
+            hideIntroUI();
             hideWorldGameOverPanel();
-            introScreen.style.opacity = '0';
-            introScreen.style.display = 'none';
 
             startInProgress = false;
             gameState = GAME_STATE.PLAYING;
@@ -2423,25 +2471,14 @@
         }
 
         function showGameOverUI() {
-            const activeXRSession = renderer?.xr?.getSession?.();
-            const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-            const isMobileARSession = !!(activeXRSession && xrSession && coarsePointer);
-
-            if (isMobileARSession) {
-                // Mobile AR: use the normal tappable HTML card only.
-                gameOverCard.style.display = 'flex';
-                hideWorldGameOverPanel();
-                return;
-            }
-
-            if (activeXRSession) {
+            if (shouldUseWorldXRUI()) {
                 // Headset/controller XR: use the in-world replay panel only.
                 gameOverCard.style.display = 'none';
                 showWorldGameOverPanel();
                 return;
             }
 
-            // Non-XR fallback/browser mode: use normal HTML card.
+            // Mobile AR and non-XR fallback/browser mode: use the normal tappable HTML card only.
             gameOverCard.style.display = 'flex';
             hideWorldGameOverPanel();
         }
@@ -2471,7 +2508,7 @@
         // 7. Reset game: Go back to scanning
         function resetGame() {
             invalidateStartSequence();
-            hideWorldIntroTitle();
+            hideIntroUI();
             hideWorldGameOverPanel();
             // FIXED: STOP OUTRO MUSIC IMMEDIATELY
             if (gameOverSound) {
