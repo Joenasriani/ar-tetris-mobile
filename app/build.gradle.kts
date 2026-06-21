@@ -12,8 +12,34 @@ android {
         applicationId = "com.artetris.mobile"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = providers.gradleProperty("ARTETRIS_VERSION_CODE").map(String::toInt).getOrElse(1)
+        versionName = providers.gradleProperty("ARTETRIS_VERSION_NAME").getOrElse("1.0.0")
+    }
+
+    signingConfigs {
+        create("release") {
+            val storeFilePath = providers.gradleProperty("ARTETRIS_RELEASE_STORE_FILE").orNull
+            if (!storeFilePath.isNullOrBlank()) {
+                storeFile = file(storeFilePath)
+                storePassword = providers.gradleProperty("ARTETRIS_RELEASE_STORE_PASSWORD").orNull
+                keyAlias = providers.gradleProperty("ARTETRIS_RELEASE_KEY_ALIAS").orNull
+                keyPassword = providers.gradleProperty("ARTETRIS_RELEASE_KEY_PASSWORD").orNull
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            if (!providers.gradleProperty("ARTETRIS_RELEASE_STORE_FILE").orNull.isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 }
 
