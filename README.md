@@ -1,31 +1,25 @@
-# Rockin' Tetris Android
+# AR Tetris: Android Edition
 
-This repository now contains a self-contained Kotlin + Jetpack Compose Android implementation of the original AR / VR Tetris core loop. The mobile app is designed for a premium, upfront-paid Google Play listing and intentionally contains no onboarding paywall, Stripe integration, subscription flow, or subscription scripts.
+**Game lineage:** AR Tetris  
+**Historical names:** Rockin' Tetris, Tetris MR, AR Tetris Mobile Quest  
+**Status:** native Android edition of the AR Tetris game lineage  
+**Creator:** Joe Nasr  
+**Creator identity:** https://joe-nasr-signals.vercel.app/v2/
 
-## App architecture
+This default branch contains the Kotlin and Jetpack Compose Android implementation of Joe Nasr's AR Tetris game project.
 
-- Native Android app in `app/`.
-- UI built entirely with Jetpack Compose.
-- User data is persisted locally with Jetpack DataStore Preferences.
-- Current local data: best score.
-- Gameplay is implemented in Kotlin: 10 × 20 board, all seven tetrominoes, next-piece preview, line clears, scoring, levels, speed scaling, tap controls, swipe hard-drop, pause, replay, and local best-score saving.
+## Game identity
 
-## Controls
+The historical names above refer to the same game lineage. This Android build is an edition of that lineage, not a separate game.
 
-- Tap left third: move left one grid cell.
-- Tap right third: move right one grid cell.
-- Tap center: rotate once with simple wall kicks.
-- Swipe downward: hard drop.
-- On-screen buttons provide the same actions plus pause/resume.
+Earlier browser and spatial builds explored AR and VR presentation. The current `APK` default branch is focused on native Android gameplay with a 10 by 20 board, seven tetrominoes, line clears, scoring, levels, next-piece preview, touch controls, pause, replay and local best-score storage.
 
-## Monetization policy
+## Distribution model
 
-Do not add paywalls, subscriptions, Stripe packages, subscription scripts, or in-app checkout logic. Premium purchase entitlement is expected to be handled by the Google Play Developer Console as an upfront paid download.
+The Android edition is prepared for an upfront paid Google Play listing. It does not contain a subscription flow or in-app checkout.
 
-## Build
+## Independence
 
-Use a JDK version supported by the Android Gradle Plugin, for example Java 17:
+This is an independent falling-block puzzle project and is not affiliated with or endorsed by Tetris Holding or The Tetris Company.
 
-```bash
-JAVA_HOME=/root/.local/share/mise/installs/java/17.0.2 gradle :app:assembleDebug
-```
+Existing branches and historical files are retained as development history.
