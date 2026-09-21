@@ -4,7 +4,7 @@
 **Historical names:** Rockin' Tetris, Tetris MR, AR Tetris Mobile Quest  
 **Status:** native Android edition of the AR Tetris game lineage  
 **Creator:** Joe Nasr  
-**Creator identity:** https://joe-nasr-signals.vercel.app/v2/
+**Creator identity:** https://joe-nasr-signals.vercel.app/
 
 This default branch contains the Kotlin and Jetpack Compose Android implementation of Joe Nasr's AR Tetris game project.
 
