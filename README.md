@@ -4,11 +4,11 @@
 
 An open-source spatial falling-block game with three active targets:
 
-- **Mobile Web** — playable directly in a mobile browser, with **WebXR AR** on supported devices
+- **Mobile WebXR AR** — runs in supported mobile browsers/devices that expose WebXR `immersive-ar`
 - **Meta Quest / XR headsets** — immersive WebXR with tracked-controller input and in-world UI
 - **Native Android** — Kotlin + Jetpack Compose edition under active development
 
-The project began as a browser-based spatial game. It can be played directly on mobile web, enters WebXR AR on supported devices, supports Meta Quest/XR headsets, and now also has a native Android edition in development.
+The project began as a browser-based spatial game. The current web launcher requires WebXR `immersive-ar`; it supports handheld AR-capable browsers and includes headset-aware XR paths for Meta Quest-class browsers, while a native Android edition is also in development.
 
 ## What exists today
 
@@ -30,11 +30,13 @@ Verified in the current code:
 - local best-score persistence
 - music and gameplay audio
 - XR-safe line-clear animation
-- fallback 3D mode when immersive AR is unavailable
+- optional gameplay recording/sharing where `MediaRecorder` and canvas `captureStream()` are supported
 
 ### Meta Quest / headset XR
 
-The same WebXR code includes headset-aware behavior:
+The same WebXR code includes headset-aware behavior inside an `immersive-ar` session. It does **not** currently request a separate `immersive-vr` session. Runtime behavior still depends on headset/browser support and needs hardware validation.
+
+Implemented code paths include:
 
 - headset/browser detection
 - tracked-controller/gamepad handling
@@ -74,7 +76,7 @@ The goal is not to replace one platform with another.
 
 The goal is to evolve one game lineage across:
 
-**mobile web AR → Meta Quest / immersive XR → native Android**
+**mobile WebXR AR → Meta Quest / immersive XR → native Android**
 
 Contributors can work on one platform or on shared gameplay behavior across editions.
 
@@ -87,7 +89,7 @@ Contributors can work on one platform or on shared gameplay behavior across edit
 - touch/gesture behavior
 - Three.js performance
 - XR session lifecycle
-- fallback-mode behavior
+- deciding whether to expose the existing non-immersive `startFallback3D()` helper as a real launch option
 - recording/media behavior
 - spatial UI polish
 
@@ -121,7 +123,7 @@ See `ROADMAP.md`, `ARCHITECTURE.md`, and `CONTRIBUTING.md`.
 
 ## Running the WebXR edition
 
-The WebXR build requires a secure HTTPS origin for immersive AR.
+The WebXR build requires a secure HTTPS origin and browser/device support for WebXR `immersive-ar`. The current launch UI blocks gameplay when `immersive-ar` is unavailable.
 
 Suitable hosts include any static HTTPS host.
 
@@ -132,6 +134,8 @@ index.html
 ```
 
 The build uses Three.js via an import map and local audio assets under `music/`.
+
+The code contains a `startFallback3D()` helper, but the current launch UI does not expose it as a normal non-AR play mode.
 
 ## Building the Android edition
 
