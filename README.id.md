@@ -46,7 +46,7 @@ Code WebXR yang sama mencakup behavior khusus headset:
 
 ### Native Android
 
-Branch `android` saat ini berisi edisi Android native:
+Branch `android` berisi edisi Android native:
 
 - Kotlin
 - Jetpack Compose
@@ -113,7 +113,7 @@ Lihat `ROADMAP.md`, `ARCHITECTURE.md`, dan `CONTRIBUTING.md`.
 ## Branch
 
 - `main` — edisi spatial WebXR / mobile AR / Meta Quest
-- `android` — edisi native Android dan branch default saat ini
+- `android` — edisi native Android
 - branch historis dipertahankan sebagai riwayat pengembangan
 
 ## Menjalankan edisi WebXR
