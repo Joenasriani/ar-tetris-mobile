@@ -69,3 +69,18 @@ Goal: make contribution friction low.
 ## Contribution principle
 
 Prefer **small, reviewable, testable improvements** over large rewrites.
+
+
+## Live contributor tasks
+
+The current contributor queue is tracked in GitHub Issues:
+
+- [#15 — Extract the game rules from MainActivity into a pure Kotlin engine](https://github.com/Joenasriani/ar-tetris-mobile/issues/15)
+- [#16 — Add deterministic unit tests for movement, rotation, locking and line clears](https://github.com/Joenasriani/ar-tetris-mobile/issues/16)
+- [#17 — Add a committed Gradle wrapper for reproducible contributor builds](https://github.com/Joenasriani/ar-tetris-mobile/issues/17)
+- [#18 — Audit touch controls and gesture conflicts on real Android devices](https://github.com/Joenasriani/ar-tetris-mobile/issues/18)
+- [#19 — Improve accessibility semantics, touch targets and large-text behavior](https://github.com/Joenasriani/ar-tetris-mobile/issues/19)
+- [#20 — Audit lifecycle, pause/resume and best-score persistence](https://github.com/Joenasriani/ar-tetris-mobile/issues/20)
+- [#21 — Add an optional ghost-piece mode](https://github.com/Joenasriani/ar-tetris-mobile/issues/21)
+
+Issues labeled `help wanted` are deliberately open for outside contributors. Issue #17 is also marked `good first issue`.
