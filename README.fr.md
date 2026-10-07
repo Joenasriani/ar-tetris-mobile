@@ -4,18 +4,18 @@
 
 Un jeu spatial de blocs tombants open source avec trois cibles actives :
 
-- **Web mobile** — jouable directement dans un navigateur mobile, avec **WebXR AR** sur les appareils compatibles
+- **WebXR AR mobile** — fonctionne dans les navigateurs/appareils mobiles compatibles avec WebXR `immersive-ar`
 - **Meta Quest / casques XR** — WebXR immersif avec contrôleurs suivis et interface dans l’espace
 - **Android natif** — édition Kotlin + Jetpack Compose en développement actif
 
-Le projet a commencé comme un jeu spatial dans le navigateur. Il peut être joué directement sur le web mobile, passe en WebXR AR sur les appareils compatibles, prend en charge Meta Quest / les casques XR, et dispose maintenant aussi d’une édition Android native en développement.
+Le projet a commencé comme un jeu spatial dans le navigateur. Le lanceur web actuel exige WebXR `immersive-ar`; il cible les navigateurs AR mobiles compatibles et inclut des chemins XR adaptés aux casques, tandis qu’une édition Android native est aussi en développement.
 
 ## Ce qui existe aujourd’hui
 
 ### WebXR / AR mobile
 La branche `main` contient l’édition spatiale basée sur le navigateur.
 
-Fonctionnalités vérifiées : rendu 3D Three.js, WebXR immersive-AR, hit testing du sol, placement spatial du plateau, plateau 10 × 20, sept tétriminos, déplacements, rotation, hard drop, verrouillage, suppression de lignes, score, niveaux, aperçu de la prochaine pièce, contrôles tactiles, meilleur score local, audio, animation XR-safe et mode 3D de secours.
+Fonctionnalités vérifiées : rendu 3D Three.js, WebXR immersive-AR, hit testing du sol, placement spatial du plateau, plateau 10 × 20, sept tétriminos, déplacements, rotation, hard drop, verrouillage, suppression de lignes, score, niveaux, aperçu de la prochaine pièce, contrôles tactiles, meilleur score local, audio, animation XR-safe. Un helper `startFallback3D()` existe dans le code, mais le lanceur actuel ne l’expose pas comme mode non-AR.
 
 ### Meta Quest / XR
 Le même code WebXR gère la détection casque/navigateur, les contrôleurs suivis/gamepad, l’entrée pendant le placement et le gameplay, l’UI dans l’espace, le replay, les haptiques et le recentrage.
