@@ -1,57 +1,88 @@
-# AR / VR Tetris
+# AR Tetris XR — WebXR / Meta Quest Edition
 
-AR Tetris is a browser-based WebXR augmented reality falling-block puzzle game. It is designed for supported mobile AR browsers and Meta Quest Browser.
+This branch contains the spatial browser edition of **AR Tetris XR**.
 
-## How to run
+The project spans three targets:
 
-Use a secure HTTPS host. WebXR AR will not work from an insecure HTTP origin except localhost development contexts.
+- **Mobile Web / WebXR AR**
+- **Meta Quest / immersive XR**
+- **Native Android** on the `APK` branch
 
-Recommended deployment:
+## What this branch implements
 
-- Vercel
-- Netlify
-- GitHub Pages with HTTPS
-- Any HTTPS static host
+The current WebXR code includes:
 
-## Controls
+- Three.js 3D rendering
+- WebXR immersive-AR capability detection
+- floor hit testing
+- smoothed placement reticle
+- physical board placement
+- mobile touch controls
+- tracked-controller/gamepad handling
+- Meta Quest/headset-aware UI behavior
+- in-world intro and game-over/replay UI
+- haptic paths
+- fallback 3D mode when immersive AR is unavailable
+- score, levels and next-piece preview
+- local best-score persistence
+- XR-safe line-clear animation
+- local audio assets
 
-### Mobile touch
+## Run
 
-- Tap left side: move piece left exactly one grid cell
-- Tap right side: move piece right exactly one grid cell
-- Tap middle: rotate once
-- Swipe downward: hard drop once
+Use a secure HTTPS origin.
 
-### Quest / XR controller
+Immersive AR requires:
 
-- Controller button during scanning/placement: lock detected floor and start
-- Controller input during gameplay: supported by the game input polling logic
-
-## Audio
-
-The package includes local audio assets in `music/`:
-
-- `music/music.mp3`
-- `music/tik.mp3`
-- `music/outro.mp3`
-- `music/lineclear.mp3`
-
-The background music is set to loop in the HTML and JavaScript.
-
-## WebXR notes
-
-WebXR AR requires:
-
-- HTTPS
 - WebGL
-- Browser support for `navigator.xr`
-- Support for `immersive-ar`
-- Device camera/tracking permission
+- `navigator.xr`
+- `immersive-ar`
+- camera/tracking permission
 
-If an embedded platform blocks AR/camera permissions, open the game directly on the hosted URL.
+The entry point is:
 
-## Validation performed
+```text
+index.html
+```
 
-- JavaScript module syntax checked with Node
-- Package includes all referenced local audio files
-- VR line-clear animation moved into the WebXR-safe renderer animation loop
+## Mobile controls
+
+- tap left side → move left
+- tap center → rotate
+- tap right side → move right
+- swipe down → hard drop
+
+## Meta Quest / XR
+
+The code includes headset/controller paths for:
+
+- floor placement/start
+- movement and rotation input
+- hard drop
+- replay
+- reset/recenter
+- in-world UI
+- haptics
+
+Hardware/browser behavior still needs ongoing device validation. See the live XR issues in the repository.
+
+## Native Android edition
+
+The Android implementation is maintained on the `APK` branch using Kotlin and Jetpack Compose.
+
+Repository contributor docs:
+
+- [Contributing](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/CONTRIBUTING.md)
+- [Architecture](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/ARCHITECTURE.md)
+- [Development](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/DEVELOPMENT.md)
+- [Roadmap](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/ROADMAP.md)
+
+## Open source
+
+Source code is released under the **MIT License**.
+
+The license does not grant rights to third-party trademarks, brand names, or separately licensed assets.
+
+## Independence
+
+This is an independent falling-block puzzle project and is not affiliated with or endorsed by Tetris Holding or The Tetris Company.
