@@ -1,60 +1,100 @@
-# Contributing to AR Tetris: Android Edition
+# Contributing to AR Tetris XR
 
 Thanks for helping improve the project.
 
-This repository is the native Android edition of the AR Tetris game lineage, built with Kotlin and Jetpack Compose. Contributions should improve gameplay correctness, code quality, accessibility, performance, device compatibility, documentation, or well-scoped new capabilities.
+AR Tetris XR spans three current targets:
+
+- mobile WebXR AR
+- Meta Quest / immersive XR
+- native Android
+
+Contributions may focus on one platform or on gameplay consistency across editions.
 
 ## Before you start
 
-1. Read `README.md` and `DEVELOPMENT.md`.
+1. Read `README.md`, `ROADMAP.md`, and `ARCHITECTURE.md`.
 2. Check existing issues before starting substantial work.
-3. For larger changes, open an issue first so the approach can be discussed.
-4. Keep pull requests focused. One clear change is easier to review and merge than a large mixed refactor.
+3. For larger changes, open an issue first.
+4. Keep pull requests focused and platform-specific where possible.
 
 ## Good contribution areas
 
-- Gameplay correctness and edge cases
-- Touch and gesture responsiveness
-- Rotation and collision behavior
-- Automated tests for game rules
-- Accessibility and readable controls
-- Performance on lower-end Android devices
-- Layout behavior across screen sizes
-- Refactoring game logic away from UI code
-- Documentation and reproducible build instructions
-- New game modes that do not break the core rules
+### WebXR / mobile AR
+
+- floor placement and hit-test stability
+- WebXR session lifecycle
+- touch controls
+- mobile browser compatibility
+- Three.js performance
+- spatial UI
+- fallback mode
+
+### Meta Quest / XR
+
+- controller input
+- replay/recenter behavior
+- in-world UI
+- haptics
+- immersive-session performance
+- headset-specific QA
+
+### Android
+
+- game-engine extraction
+- automated tests
+- Gradle reproducibility
+- touch and lifecycle QA
+- accessibility
+- performance
+
+### Shared gameplay
+
+- documenting intended rules
+- identifying divergence between editions
+- scoring/level consistency
+- rotation/collision correctness
 
 ## Development flow
 
 1. Fork the repository.
-2. Create a branch from the current default branch.
+2. Start from the branch for the edition you are changing:
+   - `main` for WebXR / mobile AR / Meta Quest
+   - `APK` for native Android
 3. Make the smallest change that solves the issue.
-4. Build and test locally.
-5. Add or update tests when behavior changes.
-6. Open a pull request using the repository PR template.
+4. Test on the relevant target.
+5. Add or update tests where practical.
+6. Open a pull request using the repository template.
 
 ## Pull request expectations
 
-A strong pull request should include:
+Include:
 
-- What changed
-- Why the change is useful
-- How it was tested
-- Screenshots or recordings for visible UI changes
-- Any known limitations or follow-up work
+- platform/edition affected
+- what changed
+- why it is useful
+- exact testing performed
+- device/browser/headset details when relevant
+- screenshots or recordings for visible changes
+- known limitations
 
-Avoid unrelated cleanup inside the same pull request.
+Avoid unrelated cleanup in the same PR.
 
 ## Bug reports
 
-Please include:
+For WebXR/XR reports include:
 
-- Device and Android version
-- Exact steps to reproduce
-- Expected result
-- Actual result
-- Whether the issue happens every time
-- Screenshot or recording when useful
+- browser
+- device/headset
+- XR mode used
+- reproduction steps
+- expected vs actual result
+
+For Android reports include:
+
+- device
+- Android version
+- reproduction steps
+- expected vs actual result
 
 ## License
 
