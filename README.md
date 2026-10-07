@@ -2,11 +2,11 @@
 
 # AR Tetris XR — WebXR / Meta Quest Edition
 
-This branch contains the browser edition of **AR Tetris XR**. It is playable directly on mobile web, uses WebXR AR on supported devices, and includes Meta Quest / immersive XR support.
+This branch contains the browser edition of **AR Tetris XR**. The current launcher requires WebXR `immersive-ar`; it targets compatible mobile AR browsers/devices and includes headset-aware XR paths for Meta Quest-class browsers.
 
 The project spans three targets:
 
-- **Mobile Web** — standard browser play, with WebXR AR on supported devices
+- **Mobile WebXR AR** — requires WebXR `immersive-ar` support
 - **Meta Quest / immersive XR**
 - **Native Android** on the `APK` branch
 
@@ -24,7 +24,7 @@ The current WebXR code includes:
 - Meta Quest/headset-aware UI behavior
 - in-world intro and game-over/replay UI
 - haptic paths
-- fallback 3D mode when immersive AR is unavailable
+- optional gameplay recording/sharing where `MediaRecorder` and canvas `captureStream()` are supported
 - score, levels and next-piece preview
 - local best-score persistence
 - XR-safe line-clear animation
@@ -47,6 +47,8 @@ The entry point is:
 index.html
 ```
 
+A `startFallback3D()` helper exists in the code, but the current launch UI does not expose it as a normal non-AR play mode.
+
 ## Mobile controls
 
 - tap left side → move left
@@ -56,7 +58,9 @@ index.html
 
 ## Meta Quest / XR
 
-The code includes headset/controller paths for:
+The code includes headset/controller paths inside an `immersive-ar` session. It does **not** currently request a separate `immersive-vr` session. Hardware/browser behavior still needs ongoing device validation.
+
+Implemented paths include:
 
 - floor placement/start
 - movement and rotation input
@@ -66,7 +70,7 @@ The code includes headset/controller paths for:
 - in-world UI
 - haptics
 
-Hardware/browser behavior still needs ongoing device validation. See the live XR issues in the repository.
+See the live XR issues in the repository.
 
 ## Native Android edition
 
@@ -74,10 +78,10 @@ The Android implementation is maintained on the `APK` branch using Kotlin and Je
 
 Repository contributor docs:
 
-- [Contributing](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/CONTRIBUTING.md)
-- [Architecture](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/ARCHITECTURE.md)
-- [Development](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/DEVELOPMENT.md)
-- [Roadmap](https://github.com/Joenasriani/ar-tetris-xr/blob/APK/ROADMAP.md)
+- [Contributing](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/CONTRIBUTING.md)
+- [Architecture](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/ARCHITECTURE.md)
+- [Development](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/DEVELOPMENT.md)
+- [Roadmap](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/ROADMAP.md)
 
 ## Open source
 
