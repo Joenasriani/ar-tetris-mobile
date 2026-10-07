@@ -1,3 +1,11 @@
+## Platform / edition
+
+- [ ] WebXR / mobile AR
+- [ ] Meta Quest / headset XR
+- [ ] Native Android
+- [ ] Shared gameplay / cross-platform
+- [ ] Documentation / contributor experience
+
 ## What changed
 
 Describe the change clearly.
@@ -8,13 +16,13 @@ What problem does this solve or what capability does it add?
 
 ## Testing
 
-Describe exactly how you tested it.
+Describe exactly how you tested it, including device/browser/headset/Android version where relevant.
 
-- [ ] Built locally
 - [ ] Tested the affected gameplay path
 - [ ] Added/updated tests where practical
-- [ ] Checked for regressions in touch controls
-- [ ] Checked layout on more than one screen size when UI changed
+- [ ] Checked for input regressions when controls changed
+- [ ] Checked relevant screen/headset presentation when UI changed
+- [ ] Documented known limitations
 
 ## Evidence
 
@@ -24,4 +32,3 @@ Add screenshots, recordings, logs, or before/after notes when relevant.
 
 - [ ] This PR is focused on one coherent change
 - [ ] Unrelated refactors are excluded
-- [ ] Known limitations or follow-up work are documented
