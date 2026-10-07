@@ -4,11 +4,11 @@
 
 Trò chơi xếp khối không gian mã nguồn mở với ba mục tiêu đang hoạt động:
 
-- **Mobile Web** — chơi trực tiếp trên trình duyệt di động, có **WebXR AR** trên thiết bị được hỗ trợ
+- **Mobile WebXR AR** — chạy trên trình duyệt/thiết bị di động hỗ trợ WebXR `immersive-ar`
 - **Meta Quest / headset XR** — WebXR nhập vai với tracked controller và giao diện trong không gian
 - **Native Android** — phiên bản Kotlin + Jetpack Compose đang được phát triển
 
-Dự án bắt đầu như một trò chơi không gian chạy trên trình duyệt. Hiện có thể chơi trực tiếp trên mobile web, sử dụng WebXR AR trên thiết bị hỗ trợ, hỗ trợ Meta Quest / XR headset, và đồng thời có phiên bản Android native đang phát triển.
+Dự án bắt đầu như một trò chơi không gian chạy trên trình duyệt. Launcher web hiện tại yêu cầu WebXR `immersive-ar`; nó nhắm đến browser mobile AR tương thích và các luồng XR cho headset, đồng thời phiên bản Android native vẫn đang được phát triển.
 
 ## Hiện có
 
@@ -30,7 +30,7 @@ Nhánh `main` chứa phiên bản không gian chạy trên trình duyệt.
 - lưu best score cục bộ
 - music và gameplay audio
 - line-clear animation an toàn cho XR
-- fallback 3D khi immersive AR không khả dụng
+- code có helper `startFallback3D()`, nhưng launcher hiện chưa mở nó như một chế độ non-AR thông thường
 
 ### Meta Quest / headset XR
 
