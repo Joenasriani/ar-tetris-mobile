@@ -1,3 +1,5 @@
+[English](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.md) · [Français](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.fr.md) · [العربية](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.ar.md) · [简体中文](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.zh-CN.md) · [日本語](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.ja.md) · [한국어](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.ko.md) · [हिन्दी](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.hi.md) · [Bahasa Indonesia](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.id.md) · [Tiếng Việt](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.vi.md)
+
 # AR Tetris XR — WebXR / Meta Quest Edition
 
 This branch contains the browser edition of **AR Tetris XR**. It is playable directly on mobile web, uses WebXR AR on supported devices, and includes Meta Quest / immersive XR support.
