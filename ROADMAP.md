@@ -94,9 +94,10 @@ Goal: make outside contribution low-friction.
 - [#23 — Audit floor hit-test stability and board placement recovery](https://github.com/Joenasriani/spatial-tetris-xr/issues/23)
 - [#24 — Validate Meta Quest controller mappings, debounce and replay flow](https://github.com/Joenasriani/spatial-tetris-xr/issues/24)
 - [#25 — Audit Meta Quest in-world UI readability and comfort](https://github.com/Joenasriani/spatial-tetris-xr/issues/25)
-- [#26 — Audit mobile touch controls across AR and fallback modes](https://github.com/Joenasriani/spatial-tetris-xr/issues/26)
+- [#26 — Audit mobile touch controls in immersive AR sessions](https://github.com/Joenasriani/spatial-tetris-xr/issues/26)
 - [#27 — Add a lightweight WebXR test harness for shared gameplay rules](https://github.com/Joenasriani/spatial-tetris-xr/issues/27)
 - [#28 — Profile Three.js rendering and XR line-clear animation](https://github.com/Joenasriani/spatial-tetris-xr/issues/28)
+- [#32 — Decide whether to expose the existing non-AR fallback mode](https://github.com/Joenasriani/spatial-tetris-xr/issues/32)
 
 Issues labeled `help wanted` are deliberately open for outside contributors. Issues #17 and #27 are marked `good first issue`.
 
