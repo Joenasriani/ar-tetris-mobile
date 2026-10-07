@@ -39,13 +39,13 @@ Requirements:
 Build a debug APK:
 
 ```bash
-./gradlew assembleDebug
+gradle :app:assembleDebug
 ```
 
 Build the release bundle:
 
 ```bash
-./gradlew bundleRelease
+gradle :app:bundleRelease
 ```
 
 For release-signing details, see `PLAYSTORE_RELEASE.md`.
