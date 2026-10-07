@@ -1,10 +1,10 @@
 # AR Tetris XR — WebXR / Meta Quest Edition
 
-This branch contains the spatial browser edition of **AR Tetris XR**.
+This branch contains the browser edition of **AR Tetris XR**. It is playable directly on mobile web, uses WebXR AR on supported devices, and includes Meta Quest / immersive XR support.
 
 The project spans three targets:
 
-- **Mobile Web / WebXR AR**
+- **Mobile Web** — standard browser play, with WebXR AR on supported devices
 - **Meta Quest / immersive XR**
 - **Native Android** on the `APK` branch
 
