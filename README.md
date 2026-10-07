@@ -2,11 +2,11 @@
 
 An open-source spatial falling-block game with three active targets:
 
-- **Mobile Web / WebXR AR** — place the board in the room on supported AR-capable browsers
+- **Mobile Web** — playable directly in a mobile browser, with **WebXR AR** on supported devices
 - **Meta Quest / XR headsets** — immersive WebXR with tracked-controller input and in-world UI
 - **Native Android** — Kotlin + Jetpack Compose edition under active development
 
-The project began as a browser-based spatial game and now evolves across web AR, headset XR, and native mobile.
+The project began as a browser-based spatial game. It can be played directly on mobile web, enters WebXR AR on supported devices, supports Meta Quest/XR headsets, and now also has a native Android edition in development.
 
 ## What exists today
 
