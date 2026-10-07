@@ -46,7 +46,7 @@ Cùng code WebXR có các luồng dành cho headset:
 
 ### Native Android
 
-Nhánh `android` hiện chứa phiên bản Android native:
+Nhánh `android` chứa phiên bản Android native:
 
 - Kotlin
 - Jetpack Compose
@@ -66,7 +66,7 @@ Phiên bản Android hiện có:
 - lưu best score cục bộ
 - cấu hình Google Play release bundle
 
-> Nhánh mặc định hiện tên là `android`, nhưng chứa source code chứ không phải file APK đã build.
+> Nhánh Android có tên `android`, nhưng chứa source code chứ không phải file APK đã build.
 
 ## Hướng phát triển
 
@@ -113,7 +113,7 @@ Xem `ROADMAP.md`, `ARCHITECTURE.md`, và `CONTRIBUTING.md`.
 ## Branch
 
 - `main` — phiên bản spatial WebXR / mobile AR / Meta Quest
-- `android` — phiên bản native Android và nhánh mặc định hiện tại
+- `android` — phiên bản native Android
 - các branch lịch sử được giữ làm lịch sử phát triển
 
 ## Chạy bản WebXR
