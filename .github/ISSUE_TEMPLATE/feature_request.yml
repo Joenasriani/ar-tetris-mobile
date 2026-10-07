@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose a focused improvement to gameplay, architecture, accessibility, or developer experience
+title: "[Feature] "
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What is missing, difficult, or worth improving?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest useful version of the idea.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Gameplay
+        - Controls
+        - UI / UX
+        - Accessibility
+        - Performance
+        - Testing
+        - Architecture
+        - Documentation
+        - Build / release
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: What would make this complete?
+      description: List concrete acceptance criteria if possible.
