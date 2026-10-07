@@ -1,94 +1,136 @@
-[English](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.md) · [Français](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.fr.md) · [العربية](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.ar.md) · [简体中文](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.zh-CN.md) · [日本語](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.ja.md) · [한국어](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.ko.md) · [हिन्दी](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.hi.md) · [Bahasa Indonesia](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.id.md) · [Tiếng Việt](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/README.vi.md)
+[English](README.md) · [Français](README.fr.md) · [العربية](README.ar.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [हिन्दी](README.hi.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md)
 
-# AR Tetris XR — WebXR / Meta Quest Edition
+# Spatial Tetris XR
 
-This branch contains the browser edition of **AR Tetris XR**. The current launcher requires WebXR `immersive-ar`; it targets compatible mobile AR browsers/devices and includes headset-aware XR paths for Meta Quest-class browsers.
+An open-source spatial falling-block game with two active implementations:
 
-The project spans three targets:
+- **WebXR / mobile AR / Meta Quest-class browsers** on `main`
+- **Native Android** on `android`
 
-- **Mobile WebXR AR** — requires WebXR `immersive-ar` support
-- **Meta Quest / immersive XR**
-- **Native Android** on the `APK` branch
+The WebXR implementation requires browser/device support for WebXR `immersive-ar`. The Android edition is built with Kotlin and Jetpack Compose.
 
-## What this branch implements
+## WebXR / spatial edition
 
-The current WebXR code includes:
+The `main` branch contains the browser-based spatial edition.
+
+Verified in the current code:
 
 - Three.js 3D rendering
-- WebXR immersive-AR capability detection
-- floor hit testing
-- smoothed placement reticle
-- physical board placement
-- mobile touch controls
-- tracked-controller/gamepad handling
-- Meta Quest/headset-aware UI behavior
-- in-world intro and game-over/replay UI
-- haptic paths
-- optional gameplay recording/sharing where `MediaRecorder` and canvas `captureStream()` are supported
+- WebXR `immersive-ar` capability checks and session startup
+- required `hit-test` support with optional `dom-overlay` and `local-floor`
+- floor hit-testing and smoothed placement reticle
+- physical board placement and recenter/reset behavior
+- 10 × 20 board and seven tetromino types
+- movement, rotation, hard drop, locking and line clears
 - score, levels and next-piece preview
+- touch controls for handheld AR-capable devices
+- headset/browser detection
+- tracked-controller/gamepad input paths
+- in-world intro and game-over/replay UI for headset-style XR use
+- haptic feedback paths
 - local best-score persistence
+- music and gameplay audio
 - XR-safe line-clear animation
-- local audio assets
+- optional gameplay recording/sharing where `MediaRecorder` and canvas `captureStream()` are supported
 
-## Run
+The code also contains a non-immersive `startFallback3D()` helper, but the current launch UI does **not** expose it as a normal play mode when `immersive-ar` is unavailable.
+
+## Native Android edition
+
+The `android` branch contains the native Android implementation.
+
+Verified stack and configuration:
+
+- Kotlin
+- Jetpack Compose
+- Android DataStore
+- minSdk 26
+- targetSdk / compileSdk 36
+- portrait activity
+- no declared network or dangerous permissions
+- release signing and Android App Bundle configuration for Google Play
+
+Current gameplay includes a 10 × 20 board, seven tetrominoes, line clearing, scoring, levels, next-piece preview, touch controls, pause/replay, and local best-score storage.
+
+## Project direction
+
+The goal is to evolve one game lineage across spatial web/XR and native Android while keeping gameplay behavior consistent where appropriate.
+
+Contributors can work on WebXR, headset XR behavior, Android, or cross-edition gameplay correctness.
+
+## Contributing
+
+Start with:
+
+- [Contributing](CONTRIBUTING.md)
+- [Architecture](ARCHITECTURE.md)
+- [Development](DEVELOPMENT.md)
+- [Roadmap](ROADMAP.md)
+- [Issues](https://github.com/Joenasriani/spatial-tetris-xr/issues)
+
+## Branches
+
+- `main` — project landing + WebXR/mobile AR/Meta Quest-class implementation
+- `android` — native Android implementation
+- older development branches are historical and can be cleaned up after the default-branch switch
+
+## Run the WebXR edition
 
 Use a secure HTTPS origin.
 
-Immersive AR requires:
+Requirements:
 
 - WebGL
 - `navigator.xr`
-- `immersive-ar`
+- WebXR `immersive-ar`
 - camera/tracking permission
+- `hit-test` support
 
-The entry point is:
+Entry point:
 
 ```text
 index.html
 ```
 
-A `startFallback3D()` helper exists in the code, but the current launch UI does not expose it as a normal non-AR play mode.
+## Build the Android edition
 
-## Mobile controls
+Switch to the Android branch first:
 
-- tap left side → move left
-- tap center → rotate
-- tap right side → move right
-- swipe down → hard drop
+```bash
+git switch android
+```
 
-## Meta Quest / XR
+Requirements:
 
-The code includes headset/controller paths inside an `immersive-ar` session. It does **not** currently request a separate `immersive-vr` session. Hardware/browser behavior still needs ongoing device validation.
+- JDK 17
+- Android SDK compatible with API 36
+- compatible Gradle installation
 
-Implemented paths include:
+Debug build:
 
-- floor placement/start
-- movement and rotation input
-- hard drop
-- replay
-- reset/recenter
-- in-world UI
-- haptics
+```bash
+gradle :app:assembleDebug
+```
 
-See the live XR issues in the repository.
+Release bundle:
 
-## Native Android edition
+```bash
+gradle :app:bundleRelease
+```
 
-The Android implementation is maintained on the `APK` branch using Kotlin and Jetpack Compose.
-
-Repository contributor docs:
-
-- [Contributing](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/CONTRIBUTING.md)
-- [Architecture](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/ARCHITECTURE.md)
-- [Development](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/DEVELOPMENT.md)
-- [Roadmap](https://github.com/Joenasriani/spatial-tetris-xr/blob/APK/ROADMAP.md)
+See [PLAYSTORE_RELEASE.md](https://github.com/Joenasriani/spatial-tetris-xr/blob/android/PLAYSTORE_RELEASE.md) for signing and Play release notes.
 
 ## Open source
 
-Source code is released under the **MIT License**.
+Source code is released under the **MIT License**. See `LICENSE`.
 
-The license does not grant rights to third-party trademarks, brand names, or separately licensed assets.
+The license covers repository source code. It does not grant rights to third-party trademarks, brand names, or separately licensed assets.
 
 ## Independence
 
 This is an independent falling-block puzzle project and is not affiliated with or endorsed by Tetris Holding or The Tetris Company.
+
+## Creator
+
+Joe Nasr  
+https://joe-nasr-signals.vercel.app/
