@@ -20,7 +20,7 @@ It supports:
 
 - mobile WebXR AR where immersive AR is available
 - Meta Quest / headset XR behavior
-- non-immersive fallback 3D mode
+- a non-immersive `startFallback3D()` helper exists, but the current launcher does not expose it when AR is unavailable
 
 ### Native Android edition
 
@@ -83,7 +83,7 @@ The repository currently does not commit a Gradle wrapper; issue #17 tracks that
 - reset/recenter
 - audio
 - best score
-- fallback behavior when AR is unavailable
+- AR-required messaging when `immersive-ar` is unavailable; test fallback behavior only after/if it is wired into the launcher
 
 ### Meta Quest / XR
 
