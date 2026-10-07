@@ -1,12 +1,24 @@
 name: Bug report
-description: Report a reproducible gameplay, UI, build, or device issue
+description: Report a reproducible gameplay, XR, UI, build, or device issue
 title: "[Bug] "
 labels: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping improve AR Tetris. Reproducible reports are the most useful.
+        Thanks for helping improve Spatial Tetris XR. Reproducible reports are the most useful.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform / edition
+      options:
+        - WebXR / mobile AR
+        - Meta Quest / headset XR
+        - Native Android
+        - Shared gameplay / cross-platform
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: summary
     attributes:
@@ -19,7 +31,7 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. Start a game
+        1. Start the relevant edition
         2. ...
         3. ...
     validations:
@@ -39,19 +51,19 @@ body:
   - type: input
     id: device
     attributes:
-      label: Device
-      placeholder: e.g. Pixel 8, Galaxy S24
+      label: Device / headset
+      placeholder: e.g. Pixel 8, Galaxy S24, Meta Quest 3
     validations:
       required: true
   - type: input
-    id: android
+    id: environment
     attributes:
-      label: Android version
-      placeholder: e.g. Android 16
+      label: Browser / OS / Android version
+      placeholder: e.g. Quest Browser version, Chrome on Android, Android 16
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
       label: Screenshot, recording, or logs
-      description: Add anything that makes the bug easier to reproduce.
+      description: Add anything that makes the issue easier to reproduce.
