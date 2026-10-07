@@ -21,7 +21,7 @@ Goal: make room-scale mobile AR placement stable and usable.
 - test supported mobile AR browsers
 - audit touch and gesture conflicts
 - verify session start/stop behavior
-- improve fallback 3D behavior
+- decide whether to expose the existing fallback 3D helper as a supported non-AR launch mode
 - profile Three.js rendering on mobile hardware
 
 ## Track 3 — Meta Quest / immersive XR
@@ -81,22 +81,22 @@ Goal: make outside contribution low-friction.
 
 ### Android
 
-- [#15 — Extract the game rules from MainActivity into a pure Kotlin engine](https://github.com/Joenasriani/ar-tetris-xr/issues/15)
-- [#16 — Add deterministic unit tests for movement, rotation, locking and line clears](https://github.com/Joenasriani/ar-tetris-xr/issues/16)
-- [#17 — Add a committed Gradle wrapper for reproducible contributor builds](https://github.com/Joenasriani/ar-tetris-xr/issues/17)
-- [#18 — Audit touch controls and gesture conflicts on real Android devices](https://github.com/Joenasriani/ar-tetris-xr/issues/18)
-- [#19 — Improve accessibility semantics, touch targets and large-text behavior](https://github.com/Joenasriani/ar-tetris-xr/issues/19)
-- [#20 — Audit lifecycle, pause/resume and best-score persistence](https://github.com/Joenasriani/ar-tetris-xr/issues/20)
-- [#21 — Add an optional ghost-piece mode](https://github.com/Joenasriani/ar-tetris-xr/issues/21)
+- [#15 — Extract the game rules from MainActivity into a pure Kotlin engine](https://github.com/Joenasriani/spatial-tetris-xr/issues/15)
+- [#16 — Add deterministic unit tests for movement, rotation, locking and line clears](https://github.com/Joenasriani/spatial-tetris-xr/issues/16)
+- [#17 — Add a committed Gradle wrapper for reproducible contributor builds](https://github.com/Joenasriani/spatial-tetris-xr/issues/17)
+- [#18 — Audit touch controls and gesture conflicts on real Android devices](https://github.com/Joenasriani/spatial-tetris-xr/issues/18)
+- [#19 — Improve accessibility semantics, touch targets and large-text behavior](https://github.com/Joenasriani/spatial-tetris-xr/issues/19)
+- [#20 — Audit lifecycle, pause/resume and best-score persistence](https://github.com/Joenasriani/spatial-tetris-xr/issues/20)
+- [#21 — Add an optional ghost-piece mode](https://github.com/Joenasriani/spatial-tetris-xr/issues/21)
 
 ### WebXR / Meta Quest / XR
 
-- [#23 — Audit floor hit-test stability and board placement recovery](https://github.com/Joenasriani/ar-tetris-xr/issues/23)
-- [#24 — Validate Meta Quest controller mappings, debounce and replay flow](https://github.com/Joenasriani/ar-tetris-xr/issues/24)
-- [#25 — Audit Meta Quest in-world UI readability and comfort](https://github.com/Joenasriani/ar-tetris-xr/issues/25)
-- [#26 — Audit mobile touch controls across AR and fallback modes](https://github.com/Joenasriani/ar-tetris-xr/issues/26)
-- [#27 — Add a lightweight WebXR test harness for shared gameplay rules](https://github.com/Joenasriani/ar-tetris-xr/issues/27)
-- [#28 — Profile Three.js rendering and XR line-clear animation](https://github.com/Joenasriani/ar-tetris-xr/issues/28)
+- [#23 — Audit floor hit-test stability and board placement recovery](https://github.com/Joenasriani/spatial-tetris-xr/issues/23)
+- [#24 — Validate Meta Quest controller mappings, debounce and replay flow](https://github.com/Joenasriani/spatial-tetris-xr/issues/24)
+- [#25 — Audit Meta Quest in-world UI readability and comfort](https://github.com/Joenasriani/spatial-tetris-xr/issues/25)
+- [#26 — Audit mobile touch controls across AR and fallback modes](https://github.com/Joenasriani/spatial-tetris-xr/issues/26)
+- [#27 — Add a lightweight WebXR test harness for shared gameplay rules](https://github.com/Joenasriani/spatial-tetris-xr/issues/27)
+- [#28 — Profile Three.js rendering and XR line-clear animation](https://github.com/Joenasriani/spatial-tetris-xr/issues/28)
 
 Issues labeled `help wanted` are deliberately open for outside contributors. Issues #17 and #27 are marked `good first issue`.
 

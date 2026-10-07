@@ -4,16 +4,16 @@
 
 तीन सक्रिय लक्ष्यों वाला एक open-source spatial falling-block game:
 
-- **Mobile Web** — mobile browser में सीधे playable, समर्थित devices पर **WebXR AR**
+- **Mobile WebXR AR** — उन mobile browsers/devices पर चलता है जो WebXR `immersive-ar` support करते हैं
 - **Meta Quest / XR headsets** — tracked controllers और in-world UI के साथ immersive WebXR
 - **Native Android** — Kotlin + Jetpack Compose edition development में
 
-यह project browser-based spatial game के रूप में शुरू हुआ और अब mobile web, WebXR AR, Meta Quest / XR और native Android तक विकसित हो रहा है।
+यह project browser-based spatial game के रूप में शुरू हुआ। वर्तमान web launcher को WebXR `immersive-ar` चाहिए; यह supported mobile AR browsers और headset XR paths को target करता है, जबकि native Android edition भी development में है।
 
 ## वर्तमान implementation
 
 ### WebXR / mobile AR
-`main` branch में Three.js 3D rendering, immersive-AR capability checks, floor hit-test, spatial placement, 10 × 20 board, सात tetrominoes, movement/rotation/hard drop/locking/line clears, score, levels, next piece, touch controls, local best score, audio, XR-safe animation और 3D fallback शामिल हैं।
+`main` branch में Three.js 3D rendering, immersive-AR capability checks, floor hit-test, spatial placement, 10 × 20 board, सात tetrominoes, movement/rotation/hard drop/locking/line clears, score, levels, next piece, touch controls, local best score, audio, XR-safe animation शामिल हैं। `startFallback3D()` helper code में मौजूद है, लेकिन current launcher इसे सामान्य non-AR mode के रूप में expose नहीं करता।
 
 ### Meta Quest / XR
 उसी WebXR code में headset detection, tracked controller/gamepad, placement और gameplay input, in-world UI, replay, haptics और recenter behavior शामिल हैं।

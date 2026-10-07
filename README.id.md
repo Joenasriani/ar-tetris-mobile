@@ -4,11 +4,11 @@
 
 Game spatial falling-block open source dengan tiga target aktif:
 
-- **Mobile Web** — dapat dimainkan langsung di browser seluler, dengan **WebXR AR** pada perangkat yang didukung
+- **Mobile WebXR AR** — berjalan di browser/perangkat mobile yang mendukung WebXR `immersive-ar`
 - **Meta Quest / headset XR** — WebXR imersif dengan tracked controller dan UI di dalam ruang
 - **Native Android** — edisi Kotlin + Jetpack Compose yang masih aktif dikembangkan
 
-Proyek ini dimulai sebagai game spatial berbasis browser. Sekarang dapat dimainkan langsung di mobile web, menggunakan WebXR AR pada perangkat yang didukung, mendukung Meta Quest / XR headset, dan juga memiliki edisi native Android yang sedang dikembangkan.
+Proyek ini dimulai sebagai game spatial berbasis browser. Launcher web saat ini memerlukan WebXR `immersive-ar`; targetnya adalah browser mobile AR yang kompatibel dan jalur XR untuk headset, sementara edisi native Android juga sedang dikembangkan.
 
 ## Yang tersedia saat ini
 
@@ -30,7 +30,7 @@ Terverifikasi di code saat ini:
 - penyimpanan best score lokal
 - musik dan gameplay audio
 - animasi line-clear yang aman untuk XR
-- fallback 3D saat immersive AR tidak tersedia
+- helper `startFallback3D()` ada di code, tetapi launcher saat ini belum mengeksposnya sebagai mode non-AR normal
 
 ### Meta Quest / headset XR
 
