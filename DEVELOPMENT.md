@@ -25,13 +25,13 @@ The current implementation keeps the Compose UI, game state, game rules, scoring
 From the repository root:
 
 ```bash
-./gradlew assembleDebug
+gradle :app:assembleDebug
 ```
 
 For a release bundle:
 
 ```bash
-./gradlew bundleRelease
+gradle :app:bundleRelease
 ```
 
 Release signing values are described in `PLAYSTORE_RELEASE.md`.

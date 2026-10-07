@@ -56,6 +56,8 @@ Please include:
 - Whether the issue happens every time
 - Screenshot or recording when useful
 
-## Licensing note
+## License
 
-This repository currently does not include a LICENSE file. That means reuse and redistribution rights are not yet explicitly defined. A project licensing decision should be completed before broad third-party reuse or redistribution is encouraged.
+By contributing, you agree that your contribution may be distributed under the repository's MIT License.
+
+Do not contribute code, media, trademarks, or other material that you do not have the right to submit.
