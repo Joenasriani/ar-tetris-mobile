@@ -1,67 +1,118 @@
 # Development
 
-## Project shape
+## Editions
 
-The current Android edition is a single-app Gradle project.
+AR Tetris XR currently has two implementation branches.
 
-- Language: Kotlin
-- UI: Jetpack Compose
-- Minimum SDK: 26
-- Target SDK: 36
-- Compile SDK: 36
-- Local persistence: Android DataStore
-- Main application source: `app/src/main/java/com/artetris/mobile/MainActivity.kt`
+### WebXR / spatial edition
 
-The current implementation keeps the Compose UI, game state, game rules, scoring, piece movement, collision logic and persistence wiring close together. That makes the project easy to read initially, but it also creates a clear refactoring and testing opportunity for contributors.
+Branch: `main`
 
-## Requirements
+Primary files:
+
+- `index.html`
+- `music/`
+- `vercel.json`
+
+The WebXR edition is a static web application using Three.js and WebXR APIs.
+
+It supports:
+
+- mobile WebXR AR where immersive AR is available
+- Meta Quest / headset XR behavior
+- non-immersive fallback 3D mode
+
+### Native Android edition
+
+Branch: `APK`
+
+Stack:
+
+- Kotlin
+- Jetpack Compose
+- Android DataStore
+- minSdk 26
+- targetSdk / compileSdk 36
+
+Primary source:
+
+```text
+app/src/main/java/com/artetris/mobile/MainActivity.kt
+```
+
+## WebXR requirements
+
+- HTTPS for immersive AR outside localhost
+- WebGL
+- browser support for `navigator.xr`
+- `immersive-ar` support for room placement
+- camera/tracking permission
+- headset browser/controller support for immersive XR paths
+
+## Android requirements
 
 - JDK 17
-- Android SDK compatible with compile SDK 36
-- Gradle/Android tooling supported by the project files
+- Android SDK compatible with API 36
+- compatible Gradle installation
 
-## Build
-
-From the repository root:
+Debug build:
 
 ```bash
 gradle :app:assembleDebug
 ```
 
-For a release bundle:
+Release bundle:
 
 ```bash
 gradle :app:bundleRelease
 ```
 
-Release signing values are described in `PLAYSTORE_RELEASE.md`.
+The repository currently does not commit a Gradle wrapper; issue #17 tracks that contributor task.
 
-## What to test manually
+## Manual test matrix
 
-At minimum, verify:
+### WebXR / mobile AR
 
-- New game starts correctly
-- Left/right movement respects board bounds
-- Rotation does not overlap locked pieces
-- Hard drop locks the piece correctly
-- Completed rows clear correctly
-- Score and level progression remain consistent
-- Pause/resume works
-- Best score persists after relaunch
-- Touch targets remain usable on small and large phones
-- Portrait layouts do not clip controls or the board
+- capability detection
+- AR session start
+- floor reticle acquisition
+- board placement
+- touch move/rotate/drop
+- line clear
+- game over/replay
+- reset/recenter
+- audio
+- best score
+- fallback behavior when AR is unavailable
 
-## Automated testing gap
+### Meta Quest / XR
 
-There is currently no dedicated `app/src/test` or `app/src/androidTest` source set in the repository. Adding deterministic tests for the pure game rules is one of the highest-value contributor opportunities.
+- controller placement/start
+- controller movement/rotation/drop
+- input debounce
+- haptics
+- in-world intro
+- in-world game over/replay
+- reset/recenter
+- visibility/session interruption
+- frame stability during line-clear animation
 
-A useful direction is to extract game-rule functions and state transitions into testable Kotlin classes that do not depend on Compose or Android framework objects.
+### Android
 
-## Scope discipline
+- new game
+- movement boundaries
+- rotation collision
+- hard drop
+- line clears
+- score/level progression
+- pause/resume
+- best-score persistence
+- multiple screen sizes
 
-Prefer changes that are:
+## Testing gaps
 
-- Small enough to review
-- Easy to verify
-- Backward-compatible with the current game unless an issue explicitly calls for a behavior change
-- Documented when they alter architecture or contribution workflow
+The Android edition currently has no dedicated `app/src/test` or `app/src/androidTest` source set.
+
+The WebXR edition also lacks a structured automated test harness for the pure gameplay rules.
+
+Both are valid contribution opportunities.
