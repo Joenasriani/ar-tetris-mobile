@@ -1,101 +1,163 @@
-# AR Tetris: Android Edition
+# AR Tetris XR
 
-A native Android falling-block puzzle game built with **Kotlin** and **Jetpack Compose**.
+An open-source spatial falling-block game with three active targets:
 
-This repository is the current Android edition of Joe Nasr's AR Tetris game lineage. The project is open source and intended to be easy to inspect, fork, improve and contribute to.
+- **Mobile Web / WebXR AR** — place the board in the room on supported AR-capable browsers
+- **Meta Quest / XR headsets** — immersive WebXR with tracked-controller input and in-world UI
+- **Native Android** — Kotlin + Jetpack Compose edition under active development
 
-> The default branch is currently named `APK`, but it contains source code — not a compiled APK.
+The project began as a browser-based spatial game and now evolves across web AR, headset XR, and native mobile.
 
-## Current game
+## What exists today
+
+### WebXR / mobile AR
+
+The `main` branch contains the browser-based spatial edition.
+
+Verified in the current code:
+
+- Three.js 3D rendering
+- WebXR immersive-AR capability checks
+- floor hit-testing and placement reticle
+- physical board placement in the detected space
+- 10 × 20 board
+- seven tetromino types
+- movement, rotation, hard drop, locking and line clears
+- score, levels and next-piece preview
+- touch controls for handheld devices
+- local best-score persistence
+- music and gameplay audio
+- XR-safe line-clear animation
+- fallback 3D mode when immersive AR is unavailable
+
+### Meta Quest / headset XR
+
+The same WebXR code includes headset-aware behavior:
+
+- headset/browser detection
+- tracked-controller/gamepad handling
+- controller input during placement and gameplay
+- in-world intro UI
+- in-world game-over/replay UI
+- haptic feedback paths
+- board placement and recenter/reset behavior designed for immersive XR
+
+### Native Android
+
+The current default `APK` branch contains the native Android edition built with:
+
+- Kotlin
+- Jetpack Compose
+- Android DataStore
+- minSdk 26
+- targetSdk / compileSdk 36
 
 The Android edition currently includes:
 
 - 10 × 20 board
-- Seven tetromino types
-- Line clearing
-- Score and level progression
-- Next-piece preview
-- Touch controls
-- Pause and replay
-- Local best-score storage with Android DataStore
-- Release-bundle configuration for Google Play
+- seven tetrominoes
+- line clearing
+- scoring and levels
+- next-piece preview
+- touch controls
+- pause and replay
+- local best-score storage
+- Google Play release-bundle configuration
 
-## Tech
+> The default branch is named `APK`, but it contains source code, not a compiled APK.
 
-- Kotlin
-- Jetpack Compose
-- Android Gradle Plugin
-- DataStore
-- minSdk 26
-- targetSdk / compileSdk 36
+## Project direction
 
-## Run it
+The goal is not to replace one platform with another.
+
+The goal is to evolve one game lineage across:
+
+**mobile web AR → Meta Quest / immersive XR → native Android**
+
+Contributors can work on one platform or on shared gameplay behavior across editions.
+
+## Where contributors can help
+
+### WebXR / mobile AR
+
+- placement stability and floor detection
+- mobile browser compatibility
+- touch/gesture behavior
+- Three.js performance
+- XR session lifecycle
+- fallback-mode behavior
+- recording/media behavior
+- spatial UI polish
+
+### Meta Quest / XR
+
+- controller mappings
+- headset-specific UX
+- in-world UI readability
+- replay/recenter flow
+- haptics
+- performance in immersive sessions
+- device-specific testing
+
+### Android
+
+- extracting the game engine from `MainActivity.kt`
+- deterministic unit tests
+- touch/gesture responsiveness
+- lifecycle and persistence QA
+- accessibility
+- performance and device coverage
+- new gameplay modes
+
+See `ROADMAP.md`, `ARCHITECTURE.md`, and `CONTRIBUTING.md`.
+
+## Branches
+
+- `main` — WebXR / mobile AR / Meta Quest spatial edition
+- `APK` — native Android edition and current default branch
+- historical branches are retained for development history
+
+## Running the WebXR edition
+
+The WebXR build requires a secure HTTPS origin for immersive AR.
+
+Suitable hosts include any static HTTPS host.
+
+The main entry point is:
+
+```text
+index.html
+```
+
+The build uses Three.js via an import map and local audio assets under `music/`.
+
+## Building the Android edition
 
 Requirements:
 
 - JDK 17
 - Android SDK compatible with API 36
+- Gradle compatible with the project configuration
 
-Build a debug APK:
+Debug build:
 
 ```bash
 gradle :app:assembleDebug
 ```
 
-Build the release bundle:
+Release bundle:
 
 ```bash
 gradle :app:bundleRelease
 ```
 
-For release-signing details, see `PLAYSTORE_RELEASE.md`.
+See `PLAYSTORE_RELEASE.md` for signing and Play release notes.
 
-## Where contributors can help
-
-The current implementation keeps much of the UI, game state and game rules in `MainActivity.kt`. That makes the project approachable, but it also creates useful engineering work.
-
-High-value areas include:
-
-- Extracting the game engine into testable Kotlin classes
-- Adding deterministic unit tests for movement, rotation, locking, line clears, scoring and level progression
-- Improving touch and gesture behavior
-- Testing layouts across more Android screen sizes
-- Accessibility improvements
-- Performance profiling on lower-end devices
-- New game modes that preserve the core game
-- Documentation and build reproducibility
-
-See `ROADMAP.md` for contribution tracks and `CONTRIBUTING.md` before opening a pull request.
-
-## Project structure
-
-The current Android entry point is:
-
-```text
-app/src/main/java/com/artetris/mobile/MainActivity.kt
-```
-
-Additional implementation notes are in `ARCHITECTURE.md`.
-
-## Historical lineage
-
-Historical names for this project include:
-
-- Rockin' Tetris
-- Tetris MR
-- AR Tetris Mobile Quest
-
-Earlier browser and spatial builds explored AR and VR presentation. The current default branch focuses on the native Android edition.
-
-## Distribution model
-
-The Android edition is prepared for an upfront paid Google Play listing. It does not contain subscriptions, ads or in-app checkout.
-
-## Open-source license
+## Open source
 
 The source code in this repository is released under the **MIT License**. See `LICENSE`.
 
-The license covers the repository's source code. It does not grant rights to third-party trademarks, brand names, or assets that may have separate ownership or licensing terms.
+The license covers repository source code. It does not grant rights to third-party trademarks, brand names, or assets with separate ownership or licensing terms.
 
 ## Independence
 

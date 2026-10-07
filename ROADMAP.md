@@ -2,85 +2,104 @@
 
 This roadmap is a contribution map, not a promise of release dates.
 
-## Track 1 — Correctness and tests
+## Track 1 — Shared gameplay correctness
 
-Goal: make the core game rules easy to verify.
+Goal: keep the game rules reliable across editions.
 
-- Extract pure game logic from `MainActivity.kt`
-- Add deterministic unit tests
-- Test piece movement and board boundaries
-- Test rotation near walls and locked pieces
-- Test hard drop and piece locking
-- Test single and multi-line clears
-- Test score and level progression
-- Test game-over conditions
+- document the intended rule set
+- verify movement, rotation, locking and line clears
+- compare WebXR and Android behavior
+- reduce accidental divergence between editions
+- add deterministic tests where practical
 
-## Track 2 — Controls and accessibility
+## Track 2 — WebXR / mobile AR
 
-Goal: make the game reliable across real Android devices.
+Goal: make room-scale mobile AR placement stable and usable.
 
-- Audit touch target sizes
-- Improve gesture conflict handling
-- Add clearer control feedback
-- Test one-handed play
-- Review contrast and text readability
-- Add accessibility semantics/content descriptions where appropriate
-- Verify behavior with larger font/display settings
+- improve floor-placement robustness
+- test hit-test recovery and reticle stability
+- test supported mobile AR browsers
+- audit touch and gesture conflicts
+- verify session start/stop behavior
+- improve fallback 3D behavior
+- profile Three.js rendering on mobile hardware
 
-## Track 3 — Device quality
+## Track 3 — Meta Quest / immersive XR
 
-Goal: make the game robust across phones.
+Goal: make headset play feel intentional rather than adapted from mobile.
 
-- Test small and tall aspect ratios
-- Test multiple Android versions from minSdk upward
-- Profile frame/render performance
-- Check lifecycle behavior when backgrounding/resuming
-- Verify DataStore persistence
-- Audit pause/resume edge cases
+- validate controller mappings
+- improve controller repeat/debounce behavior
+- test placement with tracked controllers
+- improve in-world intro/game-over UI
+- verify replay/recenter flow
+- test haptics
+- profile performance in immersive WebXR sessions
+- test headset visibility/session interruptions
 
-## Track 4 — Gameplay evolution
+## Track 4 — Native Android
+
+Goal: mature the Kotlin/Jetpack Compose edition.
+
+- extract pure game logic from `MainActivity.kt`
+- add deterministic unit tests
+- add a committed Gradle wrapper
+- audit touch controls
+- improve accessibility
+- verify lifecycle and best-score persistence
+- test multiple Android devices and aspect ratios
+
+## Track 5 — Gameplay evolution
 
 Goal: add replay value without destabilizing the core.
 
-Possible contribution areas:
+Possible areas:
 
-- Alternative speed curves
-- Optional ghost piece
-- Hold-piece mechanic
-- Additional scoring modes
-- Challenge modes
-- Visual/audio polish
-- Haptic feedback
+- ghost piece
+- hold piece
+- alternative speed curves
+- challenge modes
+- additional scoring modes
+- haptics and feedback
+- visual/audio polish
 
-Each gameplay change should be proposed through an issue first and include clear acceptance criteria.
+Gameplay additions should be proposed through issues with clear acceptance criteria.
 
-## Track 5 — Developer experience
+## Track 6 — Developer experience
 
-Goal: make contribution friction low.
+Goal: make outside contribution low-friction.
 
-- Reproducible local build
-- Automated build checks
-- Test execution in CI
-- Clear release notes
-- Versioned releases
-- Contributor documentation
-- Maintain a small set of `good first issue` tasks
+- reproducible builds
+- automated checks
+- platform-specific test instructions
+- clear release notes
+- versioned releases
+- screenshots/video showing all three targets
+- maintain a small set of `good first issue` tasks
+
+## Live contributor tasks
+
+### Android
+
+- [#15 — Extract the game rules from MainActivity into a pure Kotlin engine](https://github.com/Joenasriani/ar-tetris-xr/issues/15)
+- [#16 — Add deterministic unit tests for movement, rotation, locking and line clears](https://github.com/Joenasriani/ar-tetris-xr/issues/16)
+- [#17 — Add a committed Gradle wrapper for reproducible contributor builds](https://github.com/Joenasriani/ar-tetris-xr/issues/17)
+- [#18 — Audit touch controls and gesture conflicts on real Android devices](https://github.com/Joenasriani/ar-tetris-xr/issues/18)
+- [#19 — Improve accessibility semantics, touch targets and large-text behavior](https://github.com/Joenasriani/ar-tetris-xr/issues/19)
+- [#20 — Audit lifecycle, pause/resume and best-score persistence](https://github.com/Joenasriani/ar-tetris-xr/issues/20)
+- [#21 — Add an optional ghost-piece mode](https://github.com/Joenasriani/ar-tetris-xr/issues/21)
+
+### WebXR / Meta Quest / XR
+
+- [#23 — Audit floor hit-test stability and board placement recovery](https://github.com/Joenasriani/ar-tetris-xr/issues/23)
+- [#24 — Validate Meta Quest controller mappings, debounce and replay flow](https://github.com/Joenasriani/ar-tetris-xr/issues/24)
+- [#25 — Audit Meta Quest in-world UI readability and comfort](https://github.com/Joenasriani/ar-tetris-xr/issues/25)
+- [#26 — Audit mobile touch controls across AR and fallback modes](https://github.com/Joenasriani/ar-tetris-xr/issues/26)
+- [#27 — Add a lightweight WebXR test harness for shared gameplay rules](https://github.com/Joenasriani/ar-tetris-xr/issues/27)
+- [#28 — Profile Three.js rendering and XR line-clear animation](https://github.com/Joenasriani/ar-tetris-xr/issues/28)
+
+Issues labeled `help wanted` are deliberately open for outside contributors. Issues #17 and #27 are marked `good first issue`.
 
 ## Contribution principle
 
 Prefer **small, reviewable, testable improvements** over large rewrites.
-
-
-## Live contributor tasks
-
-The current contributor queue is tracked in GitHub Issues:
-
-- [#15 — Extract the game rules from MainActivity into a pure Kotlin engine](https://github.com/Joenasriani/ar-tetris-mobile/issues/15)
-- [#16 — Add deterministic unit tests for movement, rotation, locking and line clears](https://github.com/Joenasriani/ar-tetris-mobile/issues/16)
-- [#17 — Add a committed Gradle wrapper for reproducible contributor builds](https://github.com/Joenasriani/ar-tetris-mobile/issues/17)
-- [#18 — Audit touch controls and gesture conflicts on real Android devices](https://github.com/Joenasriani/ar-tetris-mobile/issues/18)
-- [#19 — Improve accessibility semantics, touch targets and large-text behavior](https://github.com/Joenasriani/ar-tetris-mobile/issues/19)
-- [#20 — Audit lifecycle, pause/resume and best-score persistence](https://github.com/Joenasriani/ar-tetris-mobile/issues/20)
-- [#21 — Add an optional ghost-piece mode](https://github.com/Joenasriani/ar-tetris-mobile/issues/21)
-
-Issues labeled `help wanted` are deliberately open for outside contributors. Issue #17 is also marked `good first issue`.
