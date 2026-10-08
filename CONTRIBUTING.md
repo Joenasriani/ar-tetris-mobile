@@ -10,6 +10,12 @@ AR Tetris XR spans three current targets:
 
 Contributions may focus on one platform or on gameplay consistency across editions.
 
+## Contribution principle
+
+Any idea is welcome if it can lead to a real improvement, experiment, feature, design, tool, performance gain, accessibility gain, or useful extension.
+
+The current game is the starting point, not the ceiling.
+
 ## Before you start
 
 1. Read `README.md`, `ROADMAP.md`, and `ARCHITECTURE.md`.
