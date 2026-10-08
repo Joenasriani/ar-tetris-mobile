@@ -58,6 +58,8 @@ The goal is to evolve one game lineage across spatial web/XR and native Android 
 
 Contributors can work on WebXR, headset XR behavior, Android, or cross-edition gameplay correctness.
 
+Any idea is welcome if it can produce a real improvement, experiment, feature, design, tool, performance gain, accessibility gain, or useful extension. The current game is the starting point, not the ceiling.
+
 ## Contributing
 
 Start with:
